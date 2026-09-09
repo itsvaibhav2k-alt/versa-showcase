@@ -1,0 +1,74 @@
+appId: com.vaibhavmaddhi.versa
+name: Delegate Flow
+---
+- runFlow: setup-login.yaml
+# Wait for app to load on Home screen
+- waitForAnimationToEnd:
+    timeout: 10000
+
+# Navigate to Team tab (coordinate tap — text taps don't trigger nav in Expo Go)
+- tapOn:
+    point: "30%,97%"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Assert Team screen loaded
+- assertVisible:
+    label: "Team"
+- assertVisible:
+    label: "MEMBERS.*"
+
+# Tap "+ Delegate" text link in the team header to open delegate modal
+- tapOn:
+    label: "Delegate"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Assert delegate modal opened
+- assertVisible:
+    label: "Delegate Task"
+- assertVisible:
+    label: "Cancel"
+
+# Assert assignee selector label (caption label is uppercase)
+- assertVisible:
+    label: "ASSIGN TO"
+
+# Assert task input label
+- assertVisible:
+    label: "TASK"
+
+# Assert due and priority fields
+- assertVisible:
+    label: "DUE"
+- assertVisible:
+    label: "PRIORITY"
+
+# Priority options in delegate modal: Low, Med, High (segmented control)
+- assertVisible:
+    label: "Low"
+- assertVisible:
+    label: "Med"
+- assertVisible:
+    label: "High"
+
+# Tap on the first team member chip (e.g. Priya from seed data)
+- tapOn:
+    label: "Priya"
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Type a task description
+- tapOn:
+    label: "What do you want to delegate?"
+- inputText: "Review Q4 budget report"
+
+# Go back via Cancel instead of submitting (to avoid test side effects)
+- tapOn:
+    label: "Cancel"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Assert we're back on Team screen
+- assertVisible:
+    label: "Team"

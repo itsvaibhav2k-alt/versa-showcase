@@ -1,0 +1,168 @@
+{
+  "name": "Calendar Sync",
+  "nodes": [
+    {
+      "id": "cal-sync-0001",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [250, 300],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "*/15 * * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "cal-sync-0002",
+      "name": "Fetch Active Calendar Integrations",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/integrations?provider=eq.google_calendar&is_active=eq.true&select=id,user_id,organization_id,account_email",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "cal-sync-0003",
+      "name": "Loop Over Integrations",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [750, 300],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "cal-sync-0004",
+      "name": "Sync Calendar Events",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1000, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/functions/v1/sync-google-calendar",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"integration_id\": \"{{ $json.id }}\" }",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "cal-sync-0005",
+      "name": "Log Sync Event",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [1250, 300],
+      "parameters": {
+        "source": "database",
+        "workflowId": "={{ $env.EVENT_LOGGER_WORKFLOW_ID }}",
+        "workflowInputs": {
+          "value": {
+            "event_type": "calendar.synced",
+            "source_workflow": "calendar-sync",
+            "organization_id": "={{ $('Loop Over Integrations').item.json.organization_id }}",
+            "payload": "={{ { integration_id: $('Loop Over Integrations').item.json.id, account_email: $('Loop Over Integrations').item.json.account_email } }}"
+          }
+        }
+      },
+      "continueOnFail": true
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Active Calendar Integrations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Active Calendar Integrations": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Integrations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Integrations": {
+      "main": [
+        null,
+        [
+          {
+            "node": "Sync Calendar Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sync Calendar Events": {
+      "main": [
+        [
+          {
+            "node": "Log Sync Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Sync Event": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Integrations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    { "name": "scheduled" },
+    { "name": "calendar" },
+    { "name": "integration" }
+  ]
+}

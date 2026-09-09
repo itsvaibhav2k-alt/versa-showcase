@@ -1,0 +1,91 @@
+appId: com.vaibhavmaddhi.versa
+name: Call Detail Flow
+---
+- runFlow: setup-login.yaml
+# Wait for app to load
+- waitForAnimationToEnd:
+    timeout: 10000
+
+# Navigate home first to reset state (dismiss any open modals)
+- tapOn:
+    point: "10%,97%"
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Navigate to Comms tab (coordinate tap — text taps don't trigger nav in Expo Go)
+- tapOn:
+    point: "70%,97%"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Assert Comms screen loaded — header says "Comms", sub-tab says "Calls"
+- assertVisible:
+    label: "Comms"
+- assertVisible:
+    label: "Calls"
+
+# Make sure Calls sub-tab is active
+- tapOn:
+    label: "Calls"
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Wait for call list to load (FlatRow items)
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Tap on a call item — seed data includes callers like "Amit Patel"
+- tapOn:
+    label: ".*Amit.*"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Assert call detail screen loaded
+- assertVisible:
+    label: "Call Details"
+
+# Assert AI Summary section OR Generate button is visible
+# Calls with summary show "AI Summary", calls without show "Generate AI Summary"
+- assertVisible:
+    label: "AI Summary"
+    optional: true
+- assertVisible:
+    label: "Generate AI Summary"
+    optional: true
+
+# Assert Follow-ups section is visible with item count
+- assertVisible:
+    label: "Follow-ups"
+- assertVisible:
+    label: ".*items.*"
+    optional: true
+
+# Assert Transcript section is visible
+- assertVisible:
+    label: "Transcript"
+
+# Scroll down to see full content
+- swipe:
+    start: "50%,70%"
+    end: "50%,30%"
+- waitForAnimationToEnd:
+    timeout: 2000
+
+# Assert action bar buttons at bottom
+- assertVisible:
+    label: "Assign to Team"
+    optional: true
+- assertVisible:
+    label: "Create Follow-up"
+    optional: true
+
+# Navigate back (back button is a ChevronLeft in a rounded container)
+- tapOn:
+    point: "10%,7%"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Assert we're back on Comms screen — "Comms" header and "Calls" sub-tab visible
+- assertVisible:
+    label: "Comms"

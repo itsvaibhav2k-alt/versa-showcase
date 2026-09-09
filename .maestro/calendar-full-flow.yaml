@@ -1,0 +1,40 @@
+appId: com.vaibhavmaddhi.versa
+name: Calendar Full Screen Flow
+---
+- runFlow: setup-login.yaml
+- waitForAnimationToEnd:
+    timeout: 10000
+
+# Navigate home
+- tapOn:
+    point: "10%,97%"
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Scroll down to schedule section
+- swipe:
+    start: "50%,70%"
+    end: "50%,20%"
+- waitForAnimationToEnd:
+    timeout: 2000
+
+# Tap "See All" to open calendar modal
+- tapOn:
+    label: "See All"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Assert Calendar screen
+- assertVisible:
+    label: "Calendar"
+
+# Assert today's events visible (Product Standup from seed)
+- assertVisible:
+    label: ".*Standup.*"
+    optional: true
+
+# Go back
+- tapOn:
+    point: "5%,7%"
+- waitForAnimationToEnd:
+    timeout: 3000

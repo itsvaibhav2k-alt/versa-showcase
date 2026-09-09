@@ -1,0 +1,35 @@
+appId: com.vaibhavmaddhi.versa
+name: Global Search Flow
+---
+- runFlow: setup-login.yaml
+- waitForAnimationToEnd:
+    timeout: 10000
+
+# Tap search icon in dashboard header
+- tapOn:
+    id: "dashboard-search-button"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Assert search screen opened
+- assertVisible:
+    label: "Search"
+
+# Type a search query (something from seed data)
+- tapOn:
+    label: "Search tasks, calls, emails..."
+    optional: true
+- inputText: "quarterly"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Assert results appeared (TASKS section should show up for "quarterly")
+- assertVisible:
+    label: "TASKS"
+    optional: true
+
+# Go back
+- tapOn:
+    point: "5%,7%"
+- waitForAnimationToEnd:
+    timeout: 3000

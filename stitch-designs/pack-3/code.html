@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mobile Team Hub</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13a4ec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101c22", // Deep charcoal/slate
+                        "card-dark": "#18242b", // Slightly lighter for cards
+                        "border-dark": "#2a373f", // Borders
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "body": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.375rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .glass-panel {
+            background: rgba(24, 36, 43, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 flex items-center justify-center min-h-screen p-4 sm:p-8">
+<div class="relative w-full max-w-[375px] h-[812px] bg-background-dark overflow-hidden shadow-2xl rounded-[40px] border-[8px] border-gray-800 flex flex-col">
+<div class="h-12 w-full flex items-center justify-between px-6 pt-2 shrink-0 z-20">
+<span class="text-white text-xs font-semibold">9:41</span>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-white">signal_cellular_alt</span>
+<span class="material-symbols-outlined text-[16px] text-white">wifi</span>
+<span class="material-symbols-outlined text-[16px] text-white">battery_full</span>
+</div>
+</div>
+<div class="px-5 pt-2 pb-4 shrink-0 z-10 bg-background-dark/95 backdrop-blur-sm sticky top-0">
+<div class="flex items-center justify-between mb-4">
+<h1 class="text-xl font-semibold text-white">Team Hub</h1>
+<div class="size-8 rounded-full bg-cover bg-center border border-slate-700" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBdPebnXdTgx1VoLv4Zatx1WxdLel4KjaKf-oNrth48dEZdsLdFx-4_Zxo6rzinmT4LucKKWI84zdLW3L01ezRGyeLADxMbsOwf9uZJG7OD5Ayv8XB_CeoPdGf2ygvLMZFB2PoBw_iCDCsNmh5gjSoWrbgHjPFfMtGYTzg_9Sm9HngTT5VNOBnQ6B3GGagyLsh5ZQ5RwZYw4FWqLJ5WNuBgfQNCXFNWFt_8d2wMBQrQKY9qBU8HMqv318f4n_sqVle8PrLCy-szLdR9");'></div>
+</div>
+<div class="relative group">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</span>
+<input class="w-full bg-card-dark border border-border-dark text-white text-sm rounded-xl py-3 pl-10 pr-4 focus:ring-1 focus:ring-primary focus:border-primary placeholder-slate-500 transition-all outline-none" placeholder="Find team members..." type="text"/>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto scrollbar-hide pb-24">
+<div class="mt-2 pl-5">
+<div class="flex items-center justify-between pr-5 mb-3">
+<h2 class="text-sm font-semibold text-slate-300 uppercase tracking-wide">Active Now</h2>
+<span class="text-xs text-primary font-medium">View All</span>
+</div>
+<div class="flex gap-4 overflow-x-auto pb-4 pr-5 scrollbar-hide snap-x">
+<div class="flex flex-col items-center gap-2 min-w-[64px] snap-start">
+<div class="relative">
+<div class="size-14 rounded-full p-0.5 border-2 border-primary/50">
+<img alt="Team member" class="w-full h-full object-cover rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDOjsaa3VzsaYMebxxcBbWa52t0GPzzNDIwB6vvuhOZNywN5yMgP4hgNTqbtZVig3TFS4qh1695yp5u9qUBeFYG7Ljef4P_w4UtmN63IUfvJaL3hOtPguv-SAwGa3wssSNlVj06gP2QwMdCs5HX4-CZIgKk-JjBUYmsxh6ZrZutpLuMuNuXx946ATUqx80Le7YpR494U-XxUn2tWtK4XuMeZMChvDheD-A1eJCggKObxVzhPDL83OjEVGbnPk1H_j3aGJmJaQT9IY3Y"/>
+</div>
+<span class="absolute bottom-0 right-0 size-3.5 bg-emerald-500 border-2 border-background-dark rounded-full"></span>
+</div>
+<span class="text-xs text-white font-medium truncate w-full text-center">Sarah</span>
+</div>
+<div class="flex flex-col items-center gap-2 min-w-[64px] snap-start">
+<div class="relative">
+<div class="size-14 rounded-full p-0.5 border-2 border-transparent">
+<img alt="Team member" class="w-full h-full object-cover rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAik2zHi49zeqntB1yhOAXRQb-uog7GvkId5Y3GnPuNAl9gufvo7MZHYr2JWl7xCUjDHYBC0qiopkXCLuWqs1mAUQ0wqT3WQgaWIIKY_OA4kuN7K6Vy5qaKKEMjIiGJJXXwQYFShgxhoCgclB4Fp8zhT0xk4txN5VKnlICBzi8Eql69hj-wPVS315eMZNqyKHBfymK8KrBXSWdrLQvBKIpItsW3199vr98CroUJG6O7nQMMSAVAmxU_6lJpmfqNxgvmhUGF7af9DXIg"/>
+</div>
+<span class="absolute bottom-0 right-0 size-3.5 bg-amber-500 border-2 border-background-dark rounded-full"></span>
+</div>
+<span class="text-xs text-slate-300 font-medium truncate w-full text-center">Michael</span>
+</div>
+<div class="flex flex-col items-center gap-2 min-w-[64px] snap-start">
+<div class="relative">
+<div class="size-14 rounded-full p-0.5 border-2 border-transparent">
+<img alt="Team member" class="w-full h-full object-cover rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAW1Trq7fUzOkjQO2F7IdngHvspikaIs8YgMnZhDFCBSrI6D6BRwbjjP5qwcZpCTY0ZnD2VekLW1o-6VLlz_VKCmWLQJaQ4JeAQ5FC41lM8lunyWfP1NxUceqXqQYQiXm5HNtRIkDszqQSA8c5AHuW5OBg4iKz8NB4aI3ruP8V0GGMeGRW4gtkYjEm9A1m-0Sy_RBZC3cq808cSABA9hsoI0549Hta6MLVgundKN3nNB-fx1Q4XV7zeq5bFM5tOn-DUrcHhp7HAOBGA"/>
+</div>
+<span class="absolute bottom-0 right-0 size-3.5 bg-emerald-500 border-2 border-background-dark rounded-full"></span>
+</div>
+<span class="text-xs text-slate-300 font-medium truncate w-full text-center">Elena</span>
+</div>
+<div class="flex flex-col items-center gap-2 min-w-[64px] snap-start">
+<div class="relative">
+<div class="size-14 rounded-full p-0.5 border-2 border-transparent">
+<img alt="Team member" class="w-full h-full object-cover rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-L3WNN6_JYVMBSg1r95GCsiIMLccFFA6141OVszyn76T2e04VtMKdl6DoR8Fhyxi1ENLE3LgLRguYtrU-A9JEIi0_-6eoFlbyYukLkYzNvDy9DTOfr-fkezxM3VEjE55zLAYjMulo7f9Jj-5kEa6c3WhTY_7desFpt-mEEREeX1fBopoMvstuNDSpGE7fJkRurajwyr2p6ocpVkvreHBFRoVBjXdvMNi2FFuHGVdyUzmobuV960lc9EUz1o9POdmylmAznkmatDEq"/>
+</div>
+<span class="absolute bottom-0 right-0 size-3.5 bg-slate-500 border-2 border-background-dark rounded-full"></span>
+</div>
+<span class="text-xs text-slate-300 font-medium truncate w-full text-center">David</span>
+</div>
+<div class="flex flex-col items-center gap-2 min-w-[64px] snap-start">
+<div class="relative">
+<div class="size-14 rounded-full p-0.5 border-2 border-transparent">
+<img alt="Team member" class="w-full h-full object-cover rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCfAV4AGPxC5YmcQzmFUz9_ks02967VA7bx2bg1IE25wuqA_ixC3LPXkhMax3wfQgI2XwcJ96XGjluNthF0YqhOhQ57_Nvof24R2G0ViwPkJdR_Tlz21kcvQhOSyoQD1scyZJVT1fP6nWo7d8rLXS82rxtgnIbErSJzPWTVv_0LmuMm_HuzNFbHsHsKMVuaeEHLwzD_Av-K1-Wpi9CMUEKNvGz3G2An2ch4Luk-8xS4GKSjfTHD3nCXsjdfUvDwC7B9DU-PDVckBSC_"/>
+</div>
+<span class="absolute bottom-0 right-0 size-3.5 bg-emerald-500 border-2 border-background-dark rounded-full"></span>
+</div>
+<span class="text-xs text-slate-300 font-medium truncate w-full text-center">Aisha</span>
+</div>
+</div>
+</div>
+<div class="px-5 mt-4 space-y-4">
+<div class="flex items-center justify-between">
+<h2 class="text-sm font-semibold text-slate-300 uppercase tracking-wide">Activity &amp; Tasks</h2>
+<button class="text-slate-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[20px]">filter_list</span>
+</button>
+</div>
+<div class="bg-card-dark border border-border-dark rounded-xl p-4 shadow-sm active:scale-[0.98] transition-transform">
+<div class="flex justify-between items-start mb-3">
+<div class="flex items-center gap-3">
+<img alt="Sarah" class="size-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDOjsaa3VzsaYMebxxcBbWa52t0GPzzNDIwB6vvuhOZNywN5yMgP4hgNTqbtZVig3TFS4qh1695yp5u9qUBeFYG7Ljef4P_w4UtmN63IUfvJaL3hOtPguv-SAwGa3wssSNlVj06gP2QwMdCs5HX4-CZIgKk-JjBUYmsxh6ZrZutpLuMuNuXx946ATUqx80Le7YpR494U-XxUn2tWtK4XuMeZMChvDheD-A1eJCggKObxVzhPDL83OjEVGbnPk1H_j3aGJmJaQT9IY3Y"/>
+<div>
+<p class="text-sm font-semibold text-white">Sarah Chen</p>
+<p class="text-xs text-primary">Researching vendors</p>
+</div>
+</div>
+<span class="px-2 py-1 rounded bg-blue-500/10 text-blue-400 text-[10px] font-medium border border-blue-500/20">In Progress</span>
+</div>
+<div class="pl-11">
+<p class="text-xs text-slate-400 leading-relaxed mb-3">Comparing cloud infrastructure costs for Q4 migration project. Initial report draft expected by 2 PM.</p>
+<div class="flex items-center gap-4 text-slate-500 text-xs">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">schedule</span> 2h left</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">chat_bubble</span> 3 comments</span>
+</div>
+</div>
+</div>
+<div class="bg-card-dark border border-border-dark rounded-xl p-4 shadow-sm active:scale-[0.98] transition-transform">
+<div class="flex justify-between items-start mb-3">
+<div class="flex items-center gap-3">
+<img alt="Michael" class="size-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAik2zHi49zeqntB1yhOAXRQb-uog7GvkId5Y3GnPuNAl9gufvo7MZHYr2JWl7xCUjDHYBC0qiopkXCLuWqs1mAUQ0wqT3WQgaWIIKY_OA4kuN7K6Vy5qaKKEMjIiGJJXXwQYFShgxhoCgclB4Fp8zhT0xk4txN5VKnlICBzi8Eql69hj-wPVS315eMZNqyKHBfymK8KrBXSWdrLQvBKIpItsW3199vr98CroUJG6O7nQMMSAVAmxU_6lJpmfqNxgvmhUGF7af9DXIg"/>
+<div>
+<p class="text-sm font-semibold text-white">Michael Ross</p>
+<p class="text-xs text-amber-500">In Client Meeting</p>
+</div>
+</div>
+<span class="px-2 py-1 rounded bg-amber-500/10 text-amber-400 text-[10px] font-medium border border-amber-500/20">Busy</span>
+</div>
+<div class="pl-11">
+<p class="text-xs text-slate-400 leading-relaxed mb-3">Presenting quarterly growth strategy to Acme Corp board members.</p>
+<div class="flex items-center gap-4 text-slate-500 text-xs">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">schedule</span> Until 11:30 AM</span>
+</div>
+</div>
+</div>
+<div class="bg-card-dark border border-border-dark rounded-xl p-4 shadow-sm active:scale-[0.98] transition-transform">
+<div class="flex justify-between items-start mb-3">
+<div class="flex items-center gap-3">
+<img alt="Elena" class="size-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDsmMsDJoG8j7XB-Xz0GOgE2fAZFFQHFRPeshJ-g_ZHZ-dTt6ifW8RNngi_K6ciele88TNQcPsDyK57krR9BjKMbSjbBiG-gZ7c5dTx9x5jcFfzSoUGa9eMYfY4TLkxhwTRM1eZFMqd077JbCL83BIvulysVQIzJ8mzJD6NaeVxnWa5DsF964VPjNzR7Pk5ivPilcs5nu41T4NKYUiz3Wau8tZtOXK6XnUWO5wrgA7Q5U57aiWKbOBK3nDdwdaZIe2qKFI2XQHGukLu"/>
+<div>
+<p class="text-sm font-semibold text-white">Elena Rodriguez</p>
+<p class="text-xs text-emerald-500">Completed Design Review</p>
+</div>
+</div>
+<span class="px-2 py-1 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-medium border border-emerald-500/20">Done</span>
+</div>
+<div class="pl-11">
+<p class="text-xs text-slate-400 leading-relaxed mb-3">Finalized the UI mockups for the new mobile dashboard feature.</p>
+<div class="flex items-center gap-4 text-slate-500 text-xs">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">check_circle</span> Approved</span>
+</div>
+</div>
+</div>
+<div class="bg-card-dark border border-border-dark rounded-xl p-4 shadow-sm active:scale-[0.98] transition-transform opacity-75">
+<div class="flex justify-between items-start mb-3">
+<div class="flex items-center gap-3">
+<img alt="David" class="size-8 rounded-full object-cover grayscale" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAxiFFUT_B-qt3hEgX_8YI3AUb61lYo4XdTD7rxP3V-tHiqFM8cwk7UicK5IRWn40A0B7zaHc-qDyIYS8xom3kmg7V4UNAj6sfoe9oK8DwKcKTxWP3-s4AjAkm2NskcaGIwbUJxyscipOxwuOBgQ9IJEbP-uBaIs7wOAqS8ZXja5IFPm_8t3igO2wJ5AiIFbQ2PcqBPwOymqHj5htOI7FdEq-m_apcxVlE0P5py1rnbYnBzqWUBgfKx680kRFk2dlojT_jvYSHnDUGV"/>
+<div>
+<p class="text-sm font-semibold text-white">David Kim</p>
+<p class="text-xs text-slate-500">Out of Office</p>
+</div>
+</div>
+<span class="px-2 py-1 rounded bg-slate-700/30 text-slate-400 text-[10px] font-medium border border-slate-600/30">OOO</span>
+</div>
+<div class="pl-11">
+<p class="text-xs text-slate-400 leading-relaxed mb-3">Returning Monday, Nov 2nd. Emergency contact: Sarah.</p>
+</div>
+</div>
+</div>
+</div>
+<button class="absolute bottom-24 right-5 size-14 bg-gradient-to-br from-primary to-blue-600 rounded-2xl shadow-lg shadow-primary/30 flex items-center justify-center text-white hover:scale-105 active:scale-95 transition-all z-30 group">
+<span class="material-symbols-outlined text-[28px] group-hover:rotate-90 transition-transform">add_task</span>
+</button>
+<div class="absolute bottom-0 w-full glass-panel border-t border-white/5 pt-2 pb-6 px-6 z-20">
+<div class="flex justify-between items-center">
+<a class="flex flex-col items-center gap-1 group w-16" href="#">
+<span class="material-symbols-outlined text-[24px] text-slate-400 group-hover:text-white transition-colors">dashboard</span>
+<span class="text-[10px] font-medium text-slate-400 group-hover:text-white transition-colors">Dash</span>
+</a>
+<a class="flex flex-col items-center gap-1 group w-16" href="#">
+<span class="material-symbols-outlined text-[24px] text-primary">group</span>
+<span class="text-[10px] font-medium text-primary">Team</span>
+</a>
+<a class="flex flex-col items-center gap-1 group w-16" href="#">
+<div class="relative">
+<span class="material-symbols-outlined text-[24px] text-slate-400 group-hover:text-white transition-colors">call</span>
+<span class="absolute -top-0.5 -right-0.5 size-2 bg-red-500 rounded-full border border-background-dark"></span>
+</div>
+<span class="text-[10px] font-medium text-slate-400 group-hover:text-white transition-colors">Calls</span>
+</a>
+<a class="flex flex-col items-center gap-1 group w-16" href="#">
+<span class="material-symbols-outlined text-[24px] text-slate-400 group-hover:text-white transition-colors">inbox</span>
+<span class="text-[10px] font-medium text-slate-400 group-hover:text-white transition-colors">Inbox</span>
+</a>
+</div>
+</div>
+<div class="absolute top-0 right-0 -z-10 w-[300px] h-[300px] bg-primary/10 rounded-full blur-[80px] pointer-events-none"></div>
+<div class="absolute bottom-20 left-0 -z-10 w-[200px] h-[200px] bg-blue-600/10 rounded-full blur-[60px] pointer-events-none"></div>
+<div class="absolute bottom-1 left-1/2 -translate-x-1/2 w-1/3 h-1 bg-white/20 rounded-full z-30"></div>
+</div>
+
+</body></html>

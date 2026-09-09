@@ -1,0 +1,275 @@
+{
+  "name": "Reminder Engine",
+  "nodes": [
+    {
+      "id": "b1b2c3d4-2222-4000-8000-000000000001",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [250, 300],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "b1b2c3d4-2222-4000-8000-000000000002",
+      "name": "Fetch Pending Reminders",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/reminders?is_fired=eq.false&remind_at=lte.now()&select=*,users:user_id(id,full_name,email,expo_push_token,organization_id)",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "b1b2c3d4-2222-4000-8000-000000000003",
+      "name": "Has Reminders?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [750, 300],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-1",
+              "leftValue": "={{ $json.length || 0 }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "b1b2c3d4-2222-4000-8000-000000000004",
+      "name": "Loop Over Reminders",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [1000, 200],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "b1b2c3d4-2222-4000-8000-000000000005",
+      "name": "Mark Reminder Fired",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1250, 200],
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/reminders?id=eq.{{ $json.id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=representation" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"is_fired\": true,\n  \"fired_at\": \"{{ new Date().toISOString() }}\"\n}",
+        "options": {}
+      }
+    },
+    {
+      "id": "b1b2c3d4-2222-4000-8000-000000000006",
+      "name": "Insert Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1500, 200],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/notifications",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=representation" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"organization_id\": \"{{ $('Loop Over Reminders').item.json.organization_id }}\",\n  \"user_id\": \"{{ $('Loop Over Reminders').item.json.user_id }}\",\n  \"title\": \"Reminder: {{ $('Loop Over Reminders').item.json.title }}\",\n  \"body\": \"{{ $('Loop Over Reminders').item.json.body || $('Loop Over Reminders').item.json.title }}\",\n  \"channel\": \"push\",\n  \"category\": \"reminder\",\n  \"reference_type\": \"reminder\",\n  \"reference_id\": \"{{ $('Loop Over Reminders').item.json.id }}\"\n}",
+        "options": {}
+      }
+    },
+    {
+      "id": "b1b2c3d4-2222-4000-8000-000000000007",
+      "name": "Send Expo Push",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1750, 200],
+      "parameters": {
+        "method": "POST",
+        "url": "https://exp.host/--/api/v2/push/send",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"to\": \"{{ $('Loop Over Reminders').item.json.users.expo_push_token }}\",\n  \"title\": \"Reminder\",\n  \"body\": \"{{ $('Loop Over Reminders').item.json.title }}\",\n  \"data\": {\n    \"type\": \"reminder\",\n    \"reminder_id\": \"{{ $('Loop Over Reminders').item.json.id }}\"\n  },\n  \"sound\": \"default\"\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "b1b2c3d4-2222-4000-8000-000000000008",
+      "name": "Log Reminder Event",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [2000, 200],
+      "parameters": {
+        "source": "database",
+        "workflowId": "={{ $env.EVENT_LOGGER_WORKFLOW_ID }}",
+        "workflowInputs": {
+          "value": {
+            "event_type": "reminder.fired",
+            "source_workflow": "reminder-engine",
+            "organization_id": "={{ $('Loop Over Reminders').item.json.organization_id }}",
+            "payload": "={{ { reminder_id: $('Loop Over Reminders').item.json.id, title: $('Loop Over Reminders').item.json.title } }}"
+          }
+        }
+      },
+      "continueOnFail": true
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Pending Reminders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Pending Reminders": {
+      "main": [
+        [
+          {
+            "node": "Has Reminders?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Reminders?": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Reminders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Reminders": {
+      "main": [
+        null,
+        [
+          {
+            "node": "Mark Reminder Fired",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Reminder Fired": {
+      "main": [
+        [
+          {
+            "node": "Insert Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Notification": {
+      "main": [
+        [
+          {
+            "node": "Send Expo Push",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Expo Push": {
+      "main": [
+        [
+          {
+            "node": "Log Reminder Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Reminder Event": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Reminders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    { "name": "scheduled" },
+    { "name": "reminders" }
+  ]
+}

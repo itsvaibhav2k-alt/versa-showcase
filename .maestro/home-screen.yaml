@@ -1,0 +1,26 @@
+appId: com.vaibhavmaddhi.versa
+name: HomeScreen - Real Data
+---
+- runFlow: setup-login.yaml
+- waitForAnimationToEnd:
+    timeout: 10000
+- assertVisible:
+    label: "good afternoon,.*"
+- assertVisible:
+    label: ".*Satya.*"
+- assertVisible:
+    label: "task"
+- assertVisible:
+    label: "meetings"
+- assertVisible:
+    label: "follow-ups"
+- assertVisible:
+    label: "PRIORITY TASKS"
+- assertVisible:
+    label: "Create new task"
+- assertVisible:
+    label: "Make a call"
+- assertVisible:
+    label: "Compose email"
+- assertVisible:
+    label: "Set reminder"

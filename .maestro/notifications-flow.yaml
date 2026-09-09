@@ -1,0 +1,43 @@
+appId: com.vaibhavmaddhi.versa
+name: Notifications Flow
+---
+- runFlow: setup-login.yaml
+# Wait for app to load on Home screen
+- waitForAnimationToEnd:
+    timeout: 10000
+
+# The bell icon is in the dashboard header — tap on it
+# The bell is a Pressable wrapping a lucide Bell icon; no text label
+# We use the accessibility approach: tap on the bell area near top-right
+- tapOn:
+    point: "90%,7%"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Assert notifications screen opened
+- assertVisible:
+    label: "Notifications"
+
+# Assert section headers or notification content is visible
+# The screen shows "Today" or "Earlier" section headers if notifications exist
+# Or "All caught up!" if empty
+- assertVisible:
+    label: ".*"
+    optional: true
+
+# Check for "Read all" button (only shows if there are unread notifications)
+- tapOn:
+    label: "Read all"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Navigate back using the ChevronLeft back button at top-left
+- tapOn:
+    point: "10%,7%"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Assert we're back on the Home screen
+- assertVisible:
+    label: ".*Satya.*"

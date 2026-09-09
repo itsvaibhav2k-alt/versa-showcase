@@ -1,0 +1,412 @@
+{
+  "name": "Task Assignment Notifier",
+  "nodes": [
+    {
+      "id": "a7b2c3d4-7777-4000-8000-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "parameters": {
+        "path": "task-assigned",
+        "httpMethod": "POST",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "webhookId": "task-assigned"
+    },
+    {
+      "id": "a7b2c3d4-7777-4000-8000-000000000002",
+      "name": "Respond Immediately",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [500, 500],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"success\": true, \"message\": \"Task assignment received\" }",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    },
+    {
+      "id": "a7b2c3d4-7777-4000-8000-000000000003",
+      "name": "Extract Task Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 300],
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\n\n// Supabase database webhook payload structure\nconst record = body.record || body;\nconst oldRecord = body.old_record || {};\n\nconst taskData = {\n  task_id: record.id,\n  title: record.title,\n  description: record.description || '',\n  status: record.status,\n  priority: record.priority,\n  assigned_to: record.assigned_to,\n  assigned_by: record.assigned_by,\n  due_date: record.due_date,\n  organization_id: record.organization_id,\n  source: record.source,\n  was_reassigned: oldRecord.assigned_to && oldRecord.assigned_to !== record.assigned_to\n};\n\nif (!taskData.assigned_to) {\n  throw new Error('No assignee found in task data');\n}\n\nreturn [{ json: taskData }];"
+      }
+    },
+    {
+      "id": "a7b2c3d4-7777-4000-8000-000000000004",
+      "name": "Fetch Assignee Details",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [750, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/users?id=eq.{{ $json.assigned_to }}&select=id,full_name,email,phone,expo_push_token,notification_preferences,organization_id",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a7b2c3d4-7777-4000-8000-000000000005",
+      "name": "Prepare Notification Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1000, 300],
+      "parameters": {
+        "jsCode": "const users = $input.first().json;\nconst taskData = $('Extract Task Data').first().json;\n\nconst user = Array.isArray(users) && users.length > 0 ? users[0] : users;\n\nif (!user || !user.id) {\n  throw new Error('Assignee user not found');\n}\n\nconst prefs = user.notification_preferences || {};\nconst pushEnabled = prefs.push_enabled !== false;\nconst emailEnabled = prefs.email_enabled === true;\n\n// Determine preferred channel\nlet preferredChannel = 'push';\nif (!pushEnabled && emailEnabled) {\n  preferredChannel = 'email';\n}\n\nconst priorityLabel = taskData.priority === 'urgent' ? 'URGENT: ' : (taskData.priority === 'high' ? 'HIGH: ' : '');\nconst title = priorityLabel + 'New Task Assigned: ' + taskData.title;\nconst body = taskData.description\n  ? taskData.description.substring(0, 200)\n  : 'You have been assigned a new ' + taskData.priority + ' priority task' + (taskData.due_date ? ' due ' + new Date(taskData.due_date).toLocaleDateString() : '') + '.';\n\nreturn [{\n  json: {\n    ...taskData,\n    user_id: user.id,\n    user_name: user.full_name,\n    user_email: user.email,\n    user_phone: user.phone,\n    expo_push_token: user.expo_push_token,\n    push_enabled: pushEnabled,\n    email_enabled: emailEnabled,\n    preferred_channel: preferredChannel,\n    notification_title: title,\n    notification_body: body\n  }\n}];"
+      }
+    },
+    {
+      "id": "a7b2c3d4-7777-4000-8000-000000000006",
+      "name": "Insert Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1250, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/notifications",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=representation" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"organization_id\": \"{{ $json.organization_id }}\",\n  \"user_id\": \"{{ $json.user_id }}\",\n  \"title\": {{ JSON.stringify($json.notification_title) }},\n  \"body\": {{ JSON.stringify($json.notification_body) }},\n  \"channel\": \"{{ $json.preferred_channel }}\",\n  \"category\": \"task\",\n  \"action_url\": \"/tasks/{{ $json.task_id }}\",\n  \"reference_type\": \"task\",\n  \"reference_id\": \"{{ $json.task_id }}\"\n}",
+        "options": {}
+      }
+    },
+    {
+      "id": "a7b2c3d4-7777-4000-8000-000000000007",
+      "name": "Route by Preference",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [1500, 300],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "outputKey": "push",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "id": "cond-push",
+                    "leftValue": "={{ $('Prepare Notification Data').item.json.push_enabled }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "outputKey": "email",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "id": "cond-email",
+                    "leftValue": "={{ $('Prepare Notification Data').item.json.email_enabled }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "outputKey": "sms",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "id": "cond-sms",
+                    "leftValue": "={{ $('Prepare Notification Data').item.json.user_phone }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEquals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "allMatchingOutputs": true
+        }
+      }
+    },
+    {
+      "id": "a7b2c3d4-7777-4000-8000-000000000008",
+      "name": "Send Expo Push",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1750, 100],
+      "parameters": {
+        "method": "POST",
+        "url": "https://exp.host/--/api/v2/push/send",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"to\": \"{{ $('Prepare Notification Data').item.json.expo_push_token }}\",\n  \"title\": {{ JSON.stringify($('Prepare Notification Data').item.json.notification_title) }},\n  \"body\": {{ JSON.stringify($('Prepare Notification Data').item.json.notification_body) }},\n  \"data\": {\n    \"type\": \"task_assigned\",\n    \"task_id\": \"{{ $('Prepare Notification Data').item.json.task_id }}\",\n    \"screen\": \"TaskDetail\"\n  },\n  \"sound\": \"default\"\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "a7b2c3d4-7777-4000-8000-000000000009",
+      "name": "Send Email via Resend",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1750, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.RESEND_API_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"from\": \"{{ $env.FROM_EMAIL || 'assistant@yourdomain.com' }}\",\n  \"to\": [\"{{ $('Prepare Notification Data').item.json.user_email }}\"],\n  \"subject\": {{ JSON.stringify($('Prepare Notification Data').item.json.notification_title) }},\n  \"html\": \"<h2>New Task Assigned</h2><p><strong>{{ $('Prepare Notification Data').item.json.title }}</strong></p><p>{{ $('Prepare Notification Data').item.json.notification_body }}</p><p>Priority: {{ $('Prepare Notification Data').item.json.priority }}</p>\"\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "a7b2c3d4-7777-4000-8000-000000000010",
+      "name": "Send SMS via Twilio",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1750, 500],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.twilio.com/2010-04-01/Accounts/{{ $env.TWILIO_ACCOUNT_SID }}/Messages.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/x-www-form-urlencoded" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "string",
+        "body": "=To={{ encodeURIComponent($('Prepare Notification Data').item.json.user_phone) }}&From={{ encodeURIComponent($env.TWILIO_PHONE_NUMBER) }}&Body={{ encodeURIComponent($('Prepare Notification Data').item.json.notification_title + ': ' + $('Prepare Notification Data').item.json.notification_body) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "a7b2c3d4-7777-4000-8000-000000000011",
+      "name": "Log Task Event",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [2000, 300],
+      "parameters": {
+        "source": "database",
+        "workflowId": "={{ $env.EVENT_LOGGER_WORKFLOW_ID }}",
+        "workflowInputs": {
+          "value": {
+            "event_type": "task.assigned",
+            "source_workflow": "task-assignment-notifier",
+            "organization_id": "={{ $('Prepare Notification Data').item.json.organization_id }}",
+            "payload": "={{ { task_id: $('Prepare Notification Data').item.json.task_id, assigned_to: $('Prepare Notification Data').item.json.user_id, title: $('Prepare Notification Data').item.json.title, priority: $('Prepare Notification Data').item.json.priority } }}"
+          }
+        }
+      },
+      "continueOnFail": true
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Respond Immediately",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Extract Task Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Task Data": {
+      "main": [
+        [
+          {
+            "node": "Fetch Assignee Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Assignee Details": {
+      "main": [
+        [
+          {
+            "node": "Prepare Notification Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Notification Data": {
+      "main": [
+        [
+          {
+            "node": "Insert Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Notification": {
+      "main": [
+        [
+          {
+            "node": "Route by Preference",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Preference": {
+      "main": [
+        [
+          {
+            "node": "Send Expo Push",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Email via Resend",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send SMS via Twilio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Expo Push": {
+      "main": [
+        [
+          {
+            "node": "Log Task Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email via Resend": {
+      "main": [
+        [
+          {
+            "node": "Log Task Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send SMS via Twilio": {
+      "main": [
+        [
+          {
+            "node": "Log Task Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    { "name": "webhook" },
+    { "name": "tasks" },
+    { "name": "notifications" }
+  ]
+}

@@ -1,0 +1,15 @@
+appId: com.vaibhavmaddhi.versa
+name: ColorSystem - HomeScreen Visual Check
+---
+- runFlow: setup-login.yaml
+- waitForAnimationToEnd:
+    timeout: 10000
+- assertVisible:
+    label: "good.*"
+- assertVisible:
+    label: ".*Satya.*"
+- takeScreenshot: screenshots/color-home
+- swipe:
+    start: "50%,70%"
+    end: "50%,30%"
+- takeScreenshot: screenshots/color-home-scrolled

@@ -1,0 +1,36 @@
+appId: com.vaibhavmaddhi.versa
+name: Setup - Sign In as Test User
+---
+# Wait for app to load
+- waitForAnimationToEnd:
+    timeout: 15000
+
+# Check if already on home screen (signed in)
+- assertVisible:
+    label: "good.*"
+    optional: true
+
+# If we see the Sign In button, we need to authenticate
+- runFlow:
+    when:
+      visible:
+        label: "Sign In"
+    commands:
+      - tapOn:
+          label: "Sign In"
+      - waitForAnimationToEnd:
+          timeout: 5000
+      - tapOn:
+          label: "Email"
+          index: 0
+      - inputText: "satya@contoso.com"
+      - tapOn:
+          label: "Password"
+      - inputText: "password123"
+      - tapOn:
+          label: "Sign In"
+          index: 1
+      - waitForAnimationToEnd:
+          timeout: 10000
+      - assertVisible:
+          label: "good.*"

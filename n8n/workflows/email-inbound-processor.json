@@ -1,0 +1,373 @@
+{
+  "name": "Email Inbound Processor",
+  "nodes": [
+    {
+      "id": "f1b2c3d4-6666-4000-8000-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "parameters": {
+        "path": "inbound-email",
+        "httpMethod": "POST",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "webhookId": "inbound-email"
+    },
+    {
+      "id": "f1b2c3d4-6666-4000-8000-000000000002",
+      "name": "Respond Immediately",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [500, 500],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"success\": true }",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    },
+    {
+      "id": "f1b2c3d4-6666-4000-8000-000000000003",
+      "name": "Parse SendGrid Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 300],
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\n\n// SendGrid Inbound Parse sends form data fields\nconst fromRaw = body.from || body.envelope?.from || '';\nconst toRaw = body.to || body.envelope?.to?.[0] || '';\n\n// Parse \"Name <email>\" format\nfunction parseEmail(raw) {\n  const match = String(raw).match(/^(.+?)\\s*<(.+?)>$/);\n  if (match) return { name: match[1].trim(), address: match[2].trim() };\n  return { name: '', address: String(raw).trim() };\n}\n\nconst from = parseEmail(fromRaw);\nconst to = parseEmail(toRaw);\n\nconst emailData = {\n  from_address: from.address,\n  from_name: from.name,\n  to_address: to.address,\n  subject: body.subject || '(No Subject)',\n  body_text: body.text || '',\n  body_html: body.html || '',\n  sendgrid_message_id: body.headers?.['Message-ID'] || body['Message-ID'] || null,\n  // Will be resolved based on to_address -> user lookup\n  organization_id: body.organization_id || null,\n  user_id: body.user_id || null\n};\n\nreturn [{ json: emailData }];"
+      }
+    },
+    {
+      "id": "f1b2c3d4-6666-4000-8000-000000000004",
+      "name": "Lookup User by Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [750, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/users?email=eq.{{ encodeURIComponent($json.to_address) }}&select=id,organization_id,expo_push_token&limit=1",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "f1b2c3d4-6666-4000-8000-000000000005",
+      "name": "Set User Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1000, 300],
+      "parameters": {
+        "jsCode": "const users = $input.first().json;\nconst emailData = $('Parse SendGrid Data').first().json;\n\nconst user = Array.isArray(users) && users.length > 0 ? users[0] : users;\n\nreturn [{\n  json: {\n    ...emailData,\n    user_id: user?.id || emailData.user_id,\n    organization_id: user?.organization_id || emailData.organization_id,\n    expo_push_token: user?.expo_push_token || null\n  }\n}];"
+      }
+    },
+    {
+      "id": "f1b2c3d4-6666-4000-8000-000000000006",
+      "name": "Classify with Claude",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1250, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-api-key", "value": "={{ $env.CLAUDE_API_KEY }}" },
+            { "name": "anthropic-version", "value": "2023-06-01" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"claude-sonnet-4-20250514\",\n  \"max_tokens\": 512,\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Classify and summarize this email.\\n\\nFrom: {{ $json.from_name }} <{{ $json.from_address }}>\\nSubject: {{ $json.subject }}\\n\\nBody:\\n{{ $json.body_text.substring(0, 2000) }}\\n\\nReturn a JSON object with:\\n- classification: one of 'action_required', 'fyi', 'meeting', 'follow_up', 'spam', 'other'\\n- summary: 1-2 sentence summary\\n- is_urgent: boolean\\n\\nReturn ONLY valid JSON, no markdown.\"\n    }\n  ]\n}",
+        "options": {}
+      }
+    },
+    {
+      "id": "f1b2c3d4-6666-4000-8000-000000000007",
+      "name": "Parse Classification",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1500, 300],
+      "parameters": {
+        "jsCode": "const claudeResponse = $input.first().json;\nconst emailData = $('Set User Context').first().json;\n\nlet parsed = {\n  classification: 'other',\n  summary: 'Email received',\n  is_urgent: false\n};\n\ntry {\n  const text = claudeResponse.content[0].text;\n  const jsonMatch = text.match(/\\{[\\s\\S]*\\}/);\n  if (jsonMatch) {\n    parsed = JSON.parse(jsonMatch[0]);\n  }\n} catch (e) {\n  // Use defaults\n}\n\nreturn [{\n  json: {\n    ...emailData,\n    classification: parsed.classification,\n    summary: parsed.summary,\n    is_urgent: parsed.is_urgent\n  }\n}];"
+      }
+    },
+    {
+      "id": "f1b2c3d4-6666-4000-8000-000000000008",
+      "name": "Insert Email Record",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1750, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/emails",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=representation" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"organization_id\": \"{{ $json.organization_id }}\",\n  \"user_id\": \"{{ $json.user_id }}\",\n  \"from_address\": \"{{ $json.from_address }}\",\n  \"from_name\": {{ JSON.stringify($json.from_name) }},\n  \"to_address\": \"{{ $json.to_address }}\",\n  \"subject\": {{ JSON.stringify($json.subject) }},\n  \"body_text\": {{ JSON.stringify($json.body_text) }},\n  \"body_html\": {{ JSON.stringify($json.body_html) }},\n  \"classification\": \"{{ $json.classification }}\",\n  \"summary\": {{ JSON.stringify($json.summary) }},\n  \"sendgrid_message_id\": {{ $json.sendgrid_message_id ? '\"' + $json.sendgrid_message_id + '\"' : 'null' }}\n}",
+        "options": {}
+      }
+    },
+    {
+      "id": "f1b2c3d4-6666-4000-8000-000000000009",
+      "name": "Is Urgent or Action Required?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2000, 300],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-1",
+              "leftValue": "={{ $('Parse Classification').item.json.classification }}",
+              "rightValue": "action_required",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "condition-2",
+              "leftValue": "={{ $('Parse Classification').item.json.is_urgent }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        }
+      }
+    },
+    {
+      "id": "f1b2c3d4-6666-4000-8000-000000000010",
+      "name": "Insert Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2250, 200],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/notifications",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=representation" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"organization_id\": \"{{ $('Parse Classification').item.json.organization_id }}\",\n  \"user_id\": \"{{ $('Parse Classification').item.json.user_id }}\",\n  \"title\": \"{{ $('Parse Classification').item.json.is_urgent ? 'URGENT: ' : '' }}Email from {{ $('Parse Classification').item.json.from_name || $('Parse Classification').item.json.from_address }}\",\n  \"body\": {{ JSON.stringify($('Parse Classification').item.json.summary) }},\n  \"channel\": \"push\",\n  \"category\": \"email\",\n  \"reference_type\": \"email\"\n}",
+        "options": {}
+      }
+    },
+    {
+      "id": "f1b2c3d4-6666-4000-8000-000000000011",
+      "name": "Send Push Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2500, 200],
+      "parameters": {
+        "method": "POST",
+        "url": "https://exp.host/--/api/v2/push/send",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"to\": \"{{ $('Parse Classification').item.json.expo_push_token }}\",\n  \"title\": \"{{ $('Parse Classification').item.json.is_urgent ? 'URGENT: ' : '' }}Email from {{ $('Parse Classification').item.json.from_name || $('Parse Classification').item.json.from_address }}\",\n  \"body\": {{ JSON.stringify($('Parse Classification').item.json.summary) }},\n  \"data\": {\n    \"type\": \"email\",\n    \"classification\": \"{{ $('Parse Classification').item.json.classification }}\"\n  },\n  \"sound\": \"default\"\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "f1b2c3d4-6666-4000-8000-000000000012",
+      "name": "Log Email Event",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [2750, 300],
+      "parameters": {
+        "source": "database",
+        "workflowId": "={{ $env.EVENT_LOGGER_WORKFLOW_ID }}",
+        "workflowInputs": {
+          "value": {
+            "event_type": "email.inbound_processed",
+            "source_workflow": "email-inbound-processor",
+            "organization_id": "={{ $('Parse Classification').item.json.organization_id }}",
+            "payload": "={{ { from: $('Parse Classification').item.json.from_address, subject: $('Parse Classification').item.json.subject, classification: $('Parse Classification').item.json.classification, is_urgent: $('Parse Classification').item.json.is_urgent } }}"
+          }
+        }
+      },
+      "continueOnFail": true
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Respond Immediately",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Parse SendGrid Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse SendGrid Data": {
+      "main": [
+        [
+          {
+            "node": "Lookup User by Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup User by Email": {
+      "main": [
+        [
+          {
+            "node": "Set User Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set User Context": {
+      "main": [
+        [
+          {
+            "node": "Classify with Claude",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify with Claude": {
+      "main": [
+        [
+          {
+            "node": "Parse Classification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Classification": {
+      "main": [
+        [
+          {
+            "node": "Insert Email Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Email Record": {
+      "main": [
+        [
+          {
+            "node": "Is Urgent or Action Required?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Urgent or Action Required?": {
+      "main": [
+        [
+          {
+            "node": "Insert Notification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Email Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Notification": {
+      "main": [
+        [
+          {
+            "node": "Send Push Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Push Notification": {
+      "main": [
+        [
+          {
+            "node": "Log Email Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    { "name": "webhook" },
+    { "name": "email" },
+    { "name": "ai" }
+  ]
+}

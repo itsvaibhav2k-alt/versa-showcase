@@ -1,0 +1,28 @@
+appId: com.vaibhavmaddhi.versa
+name: Reminders Section Flow
+---
+- runFlow: setup-login.yaml
+- waitForAnimationToEnd:
+    timeout: 10000
+
+# Navigate home
+- tapOn:
+    point: "10%,97%"
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Scroll down to find reminders section
+- swipe:
+    start: "50%,70%"
+    end: "50%,30%"
+- waitForAnimationToEnd:
+    timeout: 2000
+
+# Assert reminders section visible
+- assertVisible:
+    label: "REMINDERS"
+
+# Scroll back up
+- swipe:
+    start: "50%,30%"
+    end: "50%,70%"

@@ -1,0 +1,61 @@
+appId: com.vaibhavmaddhi.versa
+name: Settings Webhook Flow
+---
+- runFlow: setup-login.yaml
+# Wait for app to load
+- waitForAnimationToEnd:
+    timeout: 10000
+
+# Navigate to Settings tab (coordinate tap — text taps don't trigger nav in Expo Go)
+- tapOn:
+    point: "90%,97%"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Assert settings screen loaded (no Card wrappers, FlatRows on bg-deep)
+- assertVisible:
+    label: "Settings"
+- assertVisible:
+    label: "Preferences"
+
+# Assert Digest Schedule row is visible in Preferences section
+- assertVisible:
+    label: "Digest Schedule"
+
+# Assert Notifications row is visible in Preferences section
+- assertVisible:
+    label: "Notifications"
+
+# Scroll down to Integrations section
+- swipe:
+    start: "50%,70%"
+    end: "50%,30%"
+- waitForAnimationToEnd:
+    timeout: 2000
+
+# Assert Integrations section is visible
+- assertVisible:
+    label: "Integrations"
+
+# Assert Webhooks n8n row is visible (status as plain colored text, not pill badge)
+- assertVisible:
+    label: "Webhooks n8n"
+
+# Assert Calendar Sync is still visible (regression)
+- assertVisible:
+    label: "Calendar Sync"
+
+# Scroll down to verify rest of settings
+- swipe:
+    start: "50%,70%"
+    end: "50%,30%"
+- waitForAnimationToEnd:
+    timeout: 2000
+
+# Assert Account section still renders (regression)
+- assertVisible:
+    label: "Account"
+
+# Assert Sign Out is visible (regression)
+- assertVisible:
+    label: "Sign Out"

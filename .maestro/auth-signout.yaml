@@ -1,0 +1,19 @@
+appId: com.vaibhavmaddhi.versa
+name: Auth Sign Out Flow
+---
+- waitForAnimationToEnd:
+    timeout: 10000
+# Navigate to Settings tab (coordinate tap — text taps don't trigger nav in Expo Go)
+- tapOn:
+    point: "90%,97%"
+- waitForAnimationToEnd:
+    timeout: 5000
+- assertVisible:
+    label: "Settings"
+- swipe:
+    start: "50%,70%"
+    end: "50%,30%"
+- waitForAnimationToEnd:
+    timeout: 2000
+- assertVisible:
+    label: "Sign Out"

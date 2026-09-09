@@ -1,0 +1,64 @@
+appId: com.vaibhavmaddhi.versa
+name: Task Create Flow
+---
+- runFlow: setup-login.yaml
+# Wait for app to load on Home screen
+- waitForAnimationToEnd:
+    timeout: 10000
+
+# Tap "+ Task" quick action on the Home screen
+# The QuickActions component renders "Task" as the route label but displays "+ Task"
+- tapOn:
+    label: "+ Task"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Assert task create modal opened
+- assertVisible:
+    label: "New Task"
+- assertVisible:
+    label: "Cancel"
+
+# Assert form fields are visible (section labels are uppercase captions)
+- assertVisible:
+    label: "Title"
+- assertVisible:
+    label: "Description"
+- assertVisible:
+    label: "PRIORITY"
+- assertVisible:
+    label: "Due Date"
+- assertVisible:
+    label: "ASSIGN TO"
+
+# Assert priority options — StatusDot + text label radio style
+# Priority labels: Low, Medium, High, Urgent (not "Med")
+- assertVisible:
+    label: "Low"
+- assertVisible:
+    label: "Medium"
+- assertVisible:
+    label: "High"
+- assertVisible:
+    label: "Urgent"
+
+# Type a task title
+- tapOn:
+    label: "What needs to be done?"
+- inputText: "Test task from Maestro"
+
+# Select a priority — tap "High"
+- tapOn:
+    label: "High"
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Tap "Create Task" button
+- tapOn:
+    label: "Create Task"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# After creation, modal should close and we should be back on Home
+- assertVisible:
+    label: ".*Satya.*"

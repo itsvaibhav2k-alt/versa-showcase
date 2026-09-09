@@ -1,0 +1,368 @@
+{
+  "name": "Overdue Checker",
+  "nodes": [
+    {
+      "id": "o1b2c3d4-9999-4000-8000-000000000001",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [250, 300],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "o1b2c3d4-9999-4000-8000-000000000002",
+      "name": "Fetch Overdue Tasks",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 200],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/tasks?status=in.(todo,in_progress,blocked)&due_date=lt.{{ new Date().toISOString().split('T')[0] }}&select=id,title,priority,status,due_date,assigned_to,organization_id",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "o1b2c3d4-9999-4000-8000-000000000003",
+      "name": "Fetch Due Follow-Ups",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 450],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/follow_ups?status=eq.pending&due_date=lte.{{ new Date().toISOString() }}&select=id,action,due_date,assigned_to,organization_id,call_log_id",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "o1b2c3d4-9999-4000-8000-000000000004",
+      "name": "Merge Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [750, 300],
+      "parameters": {
+        "jsCode": "const overdueTasks = $('Fetch Overdue Tasks').first().json;\nconst dueFollowUps = $('Fetch Due Follow-Ups').first().json;\n\nconst tasks = Array.isArray(overdueTasks) ? overdueTasks : [];\nconst followUps = Array.isArray(dueFollowUps) ? dueFollowUps : [];\n\nconst candidates = [];\n\n// Process overdue tasks\nfor (const task of tasks) {\n  if (!task.assigned_to) continue;\n  candidates.push({\n    dedup_key: 'task_overdue_' + task.id + '_' + new Date().toISOString().split('T')[0],\n    event_type: 'task_overdue',\n    title: 'Task Overdue: ' + task.title,\n    body: 'Your ' + task.priority + ' priority task \"' + task.title + '\" was due ' + new Date(task.due_date).toLocaleDateString() + '.',\n    user_id: task.assigned_to,\n    organization_id: task.organization_id,\n    reference_type: 'task',\n    reference_id: task.id,\n    category: 'task',\n    metadata: { title: task.title, priority: task.priority, due_date: task.due_date }\n  });\n}\n\n// Process due follow-ups\nfor (const fu of followUps) {\n  if (!fu.assigned_to) continue;\n  candidates.push({\n    dedup_key: 'follow_up_due_' + fu.id + '_' + new Date().toISOString().split('T')[0],\n    event_type: 'follow_up_due',\n    title: 'Follow-Up Due',\n    body: 'Action needed: ' + fu.action,\n    user_id: fu.assigned_to,\n    organization_id: fu.organization_id,\n    reference_type: 'follow_up',\n    reference_id: fu.id,\n    category: 'follow_up',\n    metadata: { action: fu.action, due_date: fu.due_date, call_log_id: fu.call_log_id }\n  });\n}\n\nif (candidates.length === 0) {\n  return [];\n}\n\nreturn candidates.map(c => ({ json: c }));"
+      }
+    },
+    {
+      "id": "o1b2c3d4-9999-4000-8000-000000000005",
+      "name": "Loop Over Items",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [1000, 300],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "o1b2c3d4-9999-4000-8000-000000000006",
+      "name": "Check Duplicate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1250, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/notifications?reference_type=eq.{{ $json.reference_type }}&reference_id=eq.{{ $json.reference_id }}&created_at=gte.{{ new Date(new Date().setHours(0,0,0,0)).toISOString() }}&select=id",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "o1b2c3d4-9999-4000-8000-000000000007",
+      "name": "Already Notified?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1500, 300],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-dedup",
+              "leftValue": "={{ $json.length || 0 }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "o1b2c3d4-9999-4000-8000-000000000008",
+      "name": "Insert Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1750, 200],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/notifications",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=representation" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"organization_id\": \"{{ $('Loop Over Items').item.json.organization_id }}\",\n  \"user_id\": \"{{ $('Loop Over Items').item.json.user_id }}\",\n  \"title\": {{ JSON.stringify($('Loop Over Items').item.json.title) }},\n  \"body\": {{ JSON.stringify($('Loop Over Items').item.json.body) }},\n  \"channel\": \"push\",\n  \"category\": \"{{ $('Loop Over Items').item.json.category }}\",\n  \"reference_type\": \"{{ $('Loop Over Items').item.json.reference_type }}\",\n  \"reference_id\": \"{{ $('Loop Over Items').item.json.reference_id }}\"\n}",
+        "options": {}
+      }
+    },
+    {
+      "id": "o1b2c3d4-9999-4000-8000-000000000009",
+      "name": "Fetch User Push Token",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2000, 200],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/users?id=eq.{{ $('Loop Over Items').item.json.user_id }}&select=expo_push_token",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "o1b2c3d4-9999-4000-8000-000000000010",
+      "name": "Send Expo Push",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2250, 200],
+      "parameters": {
+        "method": "POST",
+        "url": "https://exp.host/--/api/v2/push/send",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"to\": \"{{ $json[0]?.expo_push_token || $json.expo_push_token }}\",\n  \"title\": {{ JSON.stringify($('Loop Over Items').item.json.title) }},\n  \"body\": {{ JSON.stringify($('Loop Over Items').item.json.body) }},\n  \"data\": {\n    \"type\": \"{{ $('Loop Over Items').item.json.event_type }}\",\n    \"reference_id\": \"{{ $('Loop Over Items').item.json.reference_id }}\"\n  },\n  \"sound\": \"default\"\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "o1b2c3d4-9999-4000-8000-000000000011",
+      "name": "Log Event",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [2500, 200],
+      "parameters": {
+        "source": "database",
+        "workflowId": "={{ $env.EVENT_LOGGER_WORKFLOW_ID }}",
+        "workflowInputs": {
+          "value": {
+            "event_type": "=overdue.{{ $('Loop Over Items').item.json.event_type }}",
+            "source_workflow": "overdue-checker",
+            "organization_id": "={{ $('Loop Over Items').item.json.organization_id }}",
+            "payload": "={{ { reference_type: $('Loop Over Items').item.json.reference_type, reference_id: $('Loop Over Items').item.json.reference_id, user_id: $('Loop Over Items').item.json.user_id } }}"
+          }
+        }
+      },
+      "continueOnFail": true
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Overdue Tasks",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch Due Follow-Ups",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Overdue Tasks": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Due Follow-Ups": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Results": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        null,
+        [
+          {
+            "node": "Check Duplicate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Duplicate": {
+      "main": [
+        [
+          {
+            "node": "Already Notified?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Already Notified?": {
+      "main": [
+        [
+          {
+            "node": "Insert Notification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Notification": {
+      "main": [
+        [
+          {
+            "node": "Fetch User Push Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch User Push Token": {
+      "main": [
+        [
+          {
+            "node": "Send Expo Push",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Expo Push": {
+      "main": [
+        [
+          {
+            "node": "Log Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Event": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    { "name": "scheduled" },
+    { "name": "tasks" },
+    { "name": "follow_ups" },
+    { "name": "notifications" }
+  ]
+}

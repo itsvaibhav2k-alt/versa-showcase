@@ -1,0 +1,38 @@
+appId: com.vaibhavmaddhi.versa
+name: Morning Briefing Flow
+---
+- runFlow: setup-login.yaml
+# Wait for dashboard to load
+- waitForAnimationToEnd:
+    timeout: 10000
+
+# Assert dashboard greeting loaded
+- assertVisible:
+    label: "good.*"
+- assertVisible:
+    label: ".*Satya.*"
+
+# Assert StatLine is visible (regression check)
+# StatLine renders value+label pills — partial match for "tasks", "meetings", "follow-ups" still works
+- assertVisible:
+    label: "task"
+- assertVisible:
+    label: "meetings"
+- assertVisible:
+    label: "follow-ups"
+
+# Scroll down to find AI briefing hero card and schedule sections
+- swipe:
+    start: "50%,70%"
+    end: "50%,30%"
+- waitForAnimationToEnd:
+    timeout: 2000
+
+# Assert schedule section is still visible (vertical timeline, regression check)
+- assertVisible:
+    label: "SCHEDULE"
+
+# Scroll back up to verify briefing area
+- swipe:
+    start: "50%,30%"
+    end: "50%,70%"

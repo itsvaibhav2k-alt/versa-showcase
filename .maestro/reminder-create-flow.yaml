@@ -1,0 +1,47 @@
+appId: com.vaibhavmaddhi.versa
+name: Reminder Create Flow
+---
+- runFlow: setup-login.yaml
+# Wait for app to load on Home screen
+- waitForAnimationToEnd:
+    timeout: 10000
+
+# Tap "Remind" quick action on the Home screen
+- tapOn:
+    label: "Remind"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Assert reminder create modal opened
+- assertVisible:
+    label: "New Reminder"
+- assertVisible:
+    label: "Cancel"
+
+# Assert form fields are visible
+- assertVisible:
+    label: "Title"
+- assertVisible:
+    label: "Notes"
+- assertVisible:
+    label: "Date & Time"
+
+# Type a reminder title
+- tapOn:
+    label: "What do you want to remember?"
+- inputText: "Follow up with client re: proposal"
+
+# Type the date
+- tapOn:
+    label: "e.g. 2026-03-01 09:00"
+- inputText: "2026-03-15 10:00"
+
+# Tap "Create Reminder" button
+- tapOn:
+    label: "Create Reminder"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# After creation, modal should close and we should be back on Home
+- assertVisible:
+    label: ".*Satya.*"

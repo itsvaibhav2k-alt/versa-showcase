@@ -1,0 +1,27 @@
+appId: com.vaibhavmaddhi.versa
+name: Voice Input Flow
+---
+- runFlow: setup-login.yaml
+- waitForAnimationToEnd:
+    timeout: 10000
+# Navigate to Command tab (coordinate tap — text taps don't trigger nav in Expo Go)
+- tapOn:
+    point: "50%,97%"
+- waitForAnimationToEnd:
+    timeout: 5000
+# Screen heading is "Versa"
+- assertVisible:
+    label: "Versa"
+# Subtitle (was "Voice or text — your AI assistant is ready", now simplified)
+- assertVisible:
+    label: "Your AI assistant"
+# Voice FAB removed — mic is now integrated into the text input bar
+# "Tap to speak" no longer exists — verify input bar placeholder instead
+- assertVisible:
+    label: ".*Ask anything.*"
+# Empty state text still present
+- assertVisible:
+    label: ".*Ask me anything.*"
+# The mic icon is embedded in the input bar (not a standalone button)
+# When not recording, placeholder is "Ask anything..."
+# When recording, placeholder changes to "Listening..."

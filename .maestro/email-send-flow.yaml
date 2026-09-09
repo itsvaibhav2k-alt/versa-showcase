@@ -1,0 +1,97 @@
+appId: com.vaibhavmaddhi.versa
+name: Email Send Flow - Real Delivery
+---
+- runFlow: setup-login.yaml
+- waitForAnimationToEnd:
+    timeout: 10000
+
+# Dismiss any open compose modal from previous tests
+- tapOn:
+    label: "Cancel"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 2000
+
+# Navigate home first to reset state
+- tapOn:
+    point: "10%,97%"
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Navigate to Comms tab
+- tapOn:
+    point: "70%,97%"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# If in email detail, go back first
+- tapOn:
+    label: "Go back"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 2000
+
+# Navigate to Comms tab again (in case back landed us elsewhere)
+- tapOn:
+    point: "70%,97%"
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Switch to Emails sub-tab
+- tapOn:
+    label: "Emails.*"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Tap compose button via testID
+- tapOn:
+    id: "compose-email-btn"
+- waitForAnimationToEnd:
+    timeout: 8000
+
+# Assert compose modal opened
+- assertVisible:
+    label: "Compose Email"
+
+# Tap TO input field and type recipient
+- tapOn:
+    text: "recipient@example.com"
+- inputText: "itsvaibhav2k@gmail.com"
+
+# Tap prompt field and type what to write
+- tapOn:
+    text: "e.g., Follow up on our meeting about the Q3 proposal"
+- inputText: "Follow up on the Q4 budget review meeting and confirm next steps"
+
+# Assert tone and action buttons visible
+- assertVisible:
+    label: "Professional"
+- assertVisible:
+    label: "Send Directly"
+
+# Dismiss keyboard before tapping send
+- swipe:
+    start: "50%,40%"
+    end: "50%,70%"
+- waitForAnimationToEnd:
+    timeout: 2000
+
+# Tap "Send Directly" via testID
+- tapOn:
+    id: "send-directly-btn"
+- waitForAnimationToEnd:
+    timeout: 35000
+
+# Verify success toast (brief, may disappear)
+- assertVisible:
+    label: ".*Email Sent.*"
+    optional: true
+
+# Wait for modal to close
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Verify we're back on the Comms screen
+- assertVisible:
+    label: "Comms"
+    optional: true

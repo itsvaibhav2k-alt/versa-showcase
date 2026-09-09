@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AI Smart Inbox Triage</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13a4ec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101c22", // Deep charcoal
+                        "surface-dark": "#1c262d", // Slightly lighter for cards
+                        "surface-highlight": "#253038", // Hover state
+                        "text-primary": "#f1f5f9",
+                        "text-secondary": "#94a3b8",
+                        "text-accent": "#38bdf8",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar for webkit */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155; 
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569; 
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-text-primary h-screen overflow-hidden flex selection:bg-primary/30">
+<!-- Sidebar Navigation -->
+<aside class="w-[280px] h-full flex flex-col bg-[#111618] border-r border-slate-800 hidden lg:flex flex-shrink-0 z-20">
+<div class="p-6 flex items-center gap-3">
+<div class="bg-gradient-to-br from-primary to-blue-600 rounded-full w-10 h-10 flex items-center justify-center shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined text-white" style="font-size: 24px;">psychology</span>
+</div>
+<div>
+<h1 class="text-white text-base font-bold leading-tight">Chief of Staff</h1>
+<p class="text-text-secondary text-xs font-medium">AI Assistant</p>
+</div>
+</div>
+<nav class="flex-1 px-3 space-y-1 overflow-y-auto">
+<div class="mb-6">
+<p class="px-3 text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">Triage</p>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary group" href="#">
+<span class="material-symbols-outlined" style="font-size: 22px;">inbox_customize</span>
+<span class="text-sm font-medium">Smart Inbox</span>
+<span class="ml-auto bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">5</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary hover:text-white hover:bg-surface-highlight transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:text-white transition-colors" style="font-size: 22px;">snooze</span>
+<span class="text-sm font-medium">Snoozed</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary hover:text-white hover:bg-surface-highlight transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:text-white transition-colors" style="font-size: 22px;">assignment_ind</span>
+<span class="text-sm font-medium">Delegated</span>
+<span class="ml-auto text-text-secondary text-xs">3</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary hover:text-white hover:bg-surface-highlight transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:text-white transition-colors" style="font-size: 22px;">done_all</span>
+<span class="text-sm font-medium">Done</span>
+</a>
+</div>
+<div>
+<p class="px-3 text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">Insights</p>
+<div class="px-3 py-2">
+<div class="bg-surface-dark rounded-xl p-4 border border-slate-800">
+<div class="flex justify-between items-center mb-2">
+<span class="text-xs text-text-secondary font-medium">Inbox Zero</span>
+<span class="text-xs text-primary font-bold">85%</span>
+</div>
+<div class="w-full bg-slate-800 rounded-full h-1.5 mb-3">
+<div class="bg-primary h-1.5 rounded-full" style="width: 85%"></div>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-emerald-500" style="font-size: 16px;">trending_up</span>
+<span class="text-xs text-text-secondary">Top 5% of execs</span>
+</div>
+</div>
+</div>
+</div>
+</nav>
+<div class="p-4 border-t border-slate-800">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-text-secondary hover:text-white hover:bg-surface-highlight transition-colors" href="#">
+<span class="material-symbols-outlined" style="font-size: 22px;">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+<div class="flex items-center gap-3 px-3 py-3 mt-2">
+<img alt="User Profile Picture" class="w-8 h-8 rounded-full border border-slate-700" data-alt="Close up portrait of a man smiling" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAboDfLqPCE04gfowOcyCbiANFSyj1OPB5n4Lks2y9Vi-YQ9idh02VHpGXxBTwzlCu4H-bc_gaP9K8Mjzd4fao0IekfeoHKn3zfszQNAbgsLSOrmkdTU8E3XOyqD49U0ImmkhcenTLEfEF5ubE4v5DB3HWPwU_mSWuh7uDW_aPZxby29Z7h84B9gOh-b7-wSegns8m2D61xWyhqJywie0c_NHjAvRxPtiDwuV-SWsxqM-9Mgl54lbNFQ_3FPmF_i7-E8aToUTUJpIrD"/>
+<div class="flex flex-col">
+<span class="text-sm text-white font-medium">Alex Morgan</span>
+<span class="text-xs text-text-secondary">Pro Plan</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col min-w-0 bg-background-dark relative">
+<!-- Mobile Header -->
+<header class="lg:hidden flex items-center justify-between p-4 border-b border-slate-800 bg-[#111618]">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">psychology</span>
+<span class="font-bold text-white">Chief of Staff</span>
+</div>
+<button class="text-text-secondary">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</header>
+<!-- Top Bar -->
+<div class="h-16 border-b border-slate-800 flex items-center justify-between px-6 bg-background-dark/95 backdrop-blur z-10 sticky top-0">
+<div>
+<h2 class="text-xl font-bold text-white tracking-tight">Focus Mode</h2>
+<p class="text-xs text-text-secondary hidden sm:block">You have 5 high-priority items needing attention today.</p>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden md:flex items-center gap-2 px-3 py-1.5 bg-surface-dark rounded-full border border-slate-700/50">
+<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+<span class="text-xs text-text-secondary font-medium">AI Agent Online</span>
+</div>
+<button class="w-9 h-9 rounded-full bg-surface-dark hover:bg-surface-highlight flex items-center justify-center text-text-secondary transition-colors border border-slate-700/50">
+<span class="material-symbols-outlined" style="font-size: 20px;">search</span>
+</button>
+<button class="w-9 h-9 rounded-full bg-surface-dark hover:bg-surface-highlight flex items-center justify-center text-text-secondary transition-colors border border-slate-700/50 relative">
+<span class="material-symbols-outlined" style="font-size: 20px;">notifications</span>
+<span class="absolute top-2 right-2.5 w-1.5 h-1.5 bg-red-500 rounded-full border border-surface-dark"></span>
+</button>
+</div>
+</div>
+<!-- Split View Container -->
+<div class="flex-1 flex overflow-hidden">
+<!-- Left Panel: Triage Feed -->
+<div class="w-full lg:w-[45%] xl:w-[40%] flex flex-col border-r border-slate-800 overflow-y-auto">
+<div class="p-4 space-y-4">
+<!-- Section Header -->
+<div class="flex items-center justify-between px-2 pt-2">
+<h3 class="text-sm font-semibold text-text-secondary uppercase tracking-wider">Needs Attention (5)</h3>
+<button class="text-xs text-primary hover:text-primary/80 font-medium">View All</button>
+</div>
+<!-- Active Card (Selected) -->
+<div class="group relative rounded-xl p-0.5 bg-gradient-to-br from-primary via-blue-600 to-transparent shadow-lg shadow-primary/5 transition-all">
+<div class="bg-surface-dark rounded-[10px] p-5 h-full relative overflow-hidden">
+<!-- Selected Indicator -->
+<div class="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-primary/10 to-transparent rounded-bl-full -mr-8 -mt-8"></div>
+<div class="flex justify-between items-start mb-3 relative z-10">
+<div class="flex items-center gap-3">
+<img alt="Sender Avatar" class="w-10 h-10 rounded-full border-2 border-primary/20 object-cover" data-alt="Portrait of a woman smiling" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAh9sJg0QfsrfXOdnyWuy4lCagHOGIQwixryjeiWprD6ZOJIQcJjCBPUuRtw1cE4tzn8pcGpOCfxHda0T4O6btfEyP95vXBRbdTx5ktKLFeP2m9kQNsuFeSsz9EGzHGJI2RDlYL5dymOtOJ-dQZwYCZgreFd9FfxxMF85PZF2WBsPpMoXalSVBEqiVqpHaiQ5lkmnDxIyERVbEZJzxsJR2wCtsxEmiELsG9wNXaSswG6GIDI2e1lYBMDEqnMHe3k_11WfsRWnGMMUgh"/>
+<div>
+<h4 class="text-white font-bold text-base leading-tight">Sarah Jenkins (CTO)</h4>
+<p class="text-text-secondary text-xs">Re: Q3 Server Migration • 10m ago</p>
+</div>
+</div>
+<span class="bg-red-500/10 text-red-400 border border-red-500/20 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">Urgent</span>
+</div>
+<!-- AI Summary Block -->
+<div class="bg-background-dark/50 rounded-lg p-3 mb-4 border border-slate-700/50 backdrop-blur-sm relative">
+<div class="absolute -left-1 top-4 w-1 h-8 bg-gradient-to-b from-primary to-purple-500 rounded-r-full"></div>
+<div class="flex gap-2 items-start pl-2">
+<span class="material-symbols-outlined text-primary mt-0.5" style="font-size: 16px;">auto_awesome</span>
+<p class="text-sm text-gray-300 leading-relaxed">
+<span class="font-semibold text-white">Summary:</span> Requesting immediate budget approval ($50k) for the migration. Deadline is this Friday to secure vendor rates. She highlights potential downtime risks if delayed.
+                                    </p>
+</div>
+</div>
+<div class="flex items-center justify-between pt-2 border-t border-slate-800">
+<div class="flex gap-2">
+<button class="p-2 rounded-lg hover:bg-white/5 text-text-secondary transition-colors" title="Archive">
+<span class="material-symbols-outlined" style="font-size: 20px;">archive</span>
+</button>
+<button class="p-2 rounded-lg hover:bg-white/5 text-text-secondary transition-colors" title="Delete">
+<span class="material-symbols-outlined" style="font-size: 20px;">delete</span>
+</button>
+</div>
+<button class="flex items-center gap-2 text-primary font-medium text-sm bg-primary/10 hover:bg-primary/20 px-4 py-2 rounded-lg transition-colors">
+<span>Open in Workspace</span>
+<span class="material-symbols-outlined" style="font-size: 18px;">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Inactive Card 1 -->
+<div class="bg-surface-dark border border-slate-800 hover:border-slate-600 rounded-xl p-5 cursor-pointer transition-all hover:translate-x-1 group">
+<div class="flex justify-between items-start mb-2">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-purple-900/50 border border-purple-700/50 flex items-center justify-center text-purple-200 font-bold text-sm">
+                                    MK
+                                </div>
+<div>
+<h4 class="text-gray-200 font-semibold text-sm leading-tight group-hover:text-white">Mike Ross (Legal)</h4>
+<p class="text-text-secondary text-xs">Contract Review: Acme Corp</p>
+</div>
+</div>
+<span class="bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">Review</span>
+</div>
+<div class="pl-[52px]">
+<p class="text-xs text-text-secondary line-clamp-2">
+<span class="text-primary font-medium">AI:</span> Attached the revised NDA. Defines "confidential information" more broadly. Needs your signature before EOD.
+                            </p>
+</div>
+</div>
+<!-- Inactive Card 2 -->
+<div class="bg-surface-dark border border-slate-800 hover:border-slate-600 rounded-xl p-5 cursor-pointer transition-all hover:translate-x-1 group">
+<div class="flex justify-between items-start mb-2">
+<div class="flex items-center gap-3">
+<img alt="Sender Avatar" class="w-10 h-10 rounded-full border border-slate-700 object-cover" data-alt="Portrait of a smiling man" src="https://lh3.googleusercontent.com/aida-public/AB6AXuChjF8EFGqfp5SuFSgTlvv47vWgvXvrfDTmofpxe2OzlR8_Z2pTEwu_X1OL3s_0Uu-0hGcJRNmYu68t9s3t0LKjw3PML79D8ZEHQ-nuPZjfSUD0UYF4-F9PGW35NiCwFHG7lR270WmTBqAFv1LRuFAyonUNrYbgdujW0DV2JMPTPlpZoQ84XXYalyeLNYMrE30fVUGaER76ds5tBIaccJ_HHGtHQE7zu0Izmpqrcx0fM-aWivi7EzXzG0S-VSNVpAztHiGGm3OguPFZ"/>
+<div>
+<h4 class="text-gray-200 font-semibold text-sm leading-tight group-hover:text-white">David Chen (Partnerships)</h4>
+<p class="text-text-secondary text-xs">Intro: TechSummit Keynote</p>
+</div>
+</div>
+<span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">Opportunity</span>
+</div>
+<div class="pl-[52px]">
+<p class="text-xs text-text-secondary line-clamp-2">
+<span class="text-primary font-medium">AI:</span> Organizer asking if you're available to speak on Sep 15th. They are offering a VIP pass for the team.
+                            </p>
+</div>
+</div>
+<!-- Inactive Card 3 -->
+<div class="bg-surface-dark border border-slate-800 hover:border-slate-600 rounded-xl p-5 cursor-pointer transition-all hover:translate-x-1 group">
+<div class="flex justify-between items-start mb-2">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-emerald-900/50 border border-emerald-700/50 flex items-center justify-center text-emerald-200 font-bold text-sm">
+                                    HR
+                                </div>
+<div>
+<h4 class="text-gray-200 font-semibold text-sm leading-tight group-hover:text-white">People Ops</h4>
+<p class="text-text-secondary text-xs">Quarterly Review Cycle</p>
+</div>
+</div>
+</div>
+<div class="pl-[52px]">
+<p class="text-xs text-text-secondary line-clamp-2">
+<span class="text-primary font-medium">AI:</span> Reminder to complete performance reviews for your direct reports by next Monday.
+                            </p>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Panel: Decision Workspace -->
+<div class="hidden lg:flex flex-1 flex-col bg-background-dark/50 relative">
+<!-- Background Decoration -->
+<div class="absolute inset-0 overflow-hidden pointer-events-none">
+<div class="absolute top-1/4 right-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl"></div>
+<div class="absolute bottom-1/4 left-1/4 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl"></div>
+</div>
+<div class="flex-1 overflow-y-auto p-8 relative z-10">
+<!-- Context Section (Collapsible) -->
+<div class="mb-6">
+<button class="flex items-center gap-2 text-xs font-semibold text-text-secondary hover:text-white uppercase tracking-wider mb-3 group">
+<span class="material-symbols-outlined transition-transform group-hover:rotate-90" style="font-size: 16px;">chevron_right</span>
+                            Show Full Thread Context
+                        </button>
+</div>
+<!-- Active Task Card -->
+<div class="max-w-3xl mx-auto">
+<div class="flex items-center gap-3 mb-6">
+<div class="h-px bg-slate-800 flex-1"></div>
+<span class="text-xs font-medium text-text-secondary uppercase">Decision Workspace</span>
+<div class="h-px bg-slate-800 flex-1"></div>
+</div>
+<!-- Intent Input Area -->
+<div class="bg-surface-dark border border-slate-700 rounded-2xl p-6 shadow-2xl mb-6 ring-1 ring-white/5">
+<label class="block text-sm font-medium text-text-primary mb-3">
+                                What is your intent? <span class="text-text-secondary font-normal ml-1">AI will draft based on this.</span>
+</label>
+<div class="relative">
+<textarea class="w-full bg-[#111618] border border-slate-700 rounded-xl p-4 text-white placeholder-slate-500 focus:ring-2 focus:ring-primary focus:border-transparent resize-none transition-all" placeholder="e.g. Approve the budget, but ask if we can split payments over 2 months..." rows="3"></textarea>
+<button class="absolute bottom-3 right-3 bg-white text-slate-900 hover:bg-slate-200 p-2 rounded-lg transition-colors shadow-lg flex items-center justify-center">
+<span class="material-symbols-outlined" style="font-size: 20px;">arrow_upward</span>
+</button>
+</div>
+<!-- Quick Intent Chips -->
+<div class="flex flex-wrap gap-2 mt-4">
+<button class="px-3 py-1.5 rounded-full border border-slate-700 hover:border-primary/50 hover:bg-primary/5 text-xs text-text-secondary hover:text-primary transition-colors">
+                                    Approve Budget
+                                </button>
+<button class="px-3 py-1.5 rounded-full border border-slate-700 hover:border-primary/50 hover:bg-primary/5 text-xs text-text-secondary hover:text-primary transition-colors">
+                                    Schedule Meeting
+                                </button>
+<button class="px-3 py-1.5 rounded-full border border-slate-700 hover:border-primary/50 hover:bg-primary/5 text-xs text-text-secondary hover:text-primary transition-colors">
+                                    Request More Info
+                                </button>
+</div>
+</div>
+<!-- AI Draft Preview -->
+<div class="relative group">
+<!-- Label -->
+<div class="absolute -top-3 left-4 bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm z-20 flex items-center gap-1">
+<span class="material-symbols-outlined" style="font-size: 12px;">auto_awesome</span>
+                                AI DRAFT
+                            </div>
+<div class="bg-white dark:bg-[#1e293b] rounded-xl p-6 shadow-lg border border-slate-200 dark:border-slate-700 relative overflow-hidden">
+<!-- Editable Content -->
+<div class="space-y-4 text-slate-800 dark:text-slate-200 text-sm leading-relaxed" contenteditable="true">
+<p>Hi Sarah,</p>
+<p>The migration plan looks solid. I'm approving the <span class="bg-primary/20 text-primary px-1 rounded cursor-pointer hover:bg-primary/30">$50k budget</span> allocation for Q3.</p>
+<p>Quick question - do we have any flexibility to split these vendor payments over two months to help with cash flow this quarter?</p>
+<p>Thanks,<br/>Alex</p>
+</div>
+<!-- Hover Actions -->
+<div class="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-primary transition-colors" title="Regenerate">
+<span class="material-symbols-outlined" style="font-size: 18px;">refresh</span>
+</button>
+<button class="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-primary transition-colors" title="Copy">
+<span class="material-symbols-outlined" style="font-size: 18px;">content_copy</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Action Bar -->
+<div class="p-6 border-t border-slate-800 bg-[#111618] flex items-center justify-between gap-4 z-20">
+<div class="flex items-center gap-2">
+<button class="flex flex-col items-center justify-center w-16 h-14 rounded-lg hover:bg-surface-highlight text-text-secondary hover:text-white transition-colors gap-1 group">
+<span class="material-symbols-outlined group-hover:text-purple-400" style="font-size: 24px;">assignment_ind</span>
+<span class="text-[10px] font-medium">Delegate</span>
+</button>
+<button class="flex flex-col items-center justify-center w-16 h-14 rounded-lg hover:bg-surface-highlight text-text-secondary hover:text-white transition-colors gap-1 group">
+<span class="material-symbols-outlined group-hover:text-yellow-400" style="font-size: 24px;">snooze</span>
+<span class="text-[10px] font-medium">Snooze</span>
+</button>
+</div>
+<div class="flex items-center gap-3">
+<span class="text-xs text-text-secondary hidden xl:inline-block mr-2">Press <kbd class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono text-[10px]">Cmd+Enter</kbd> to send</span>
+<button class="px-6 py-3 rounded-lg border border-slate-600 hover:border-slate-500 text-white font-medium text-sm transition-colors">
+                            Edit Draft
+                        </button>
+<button class="px-8 py-3 rounded-lg bg-primary hover:bg-sky-500 text-white font-bold text-sm shadow-lg shadow-primary/25 transition-all transform active:scale-95 flex items-center gap-2">
+<span>Send Reply</span>
+<span class="material-symbols-outlined" style="font-size: 18px;">send</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

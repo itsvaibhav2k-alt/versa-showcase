@@ -1,0 +1,75 @@
+appId: com.vaibhavmaddhi.versa
+name: Webhook Call Detail Flow
+---
+- runFlow: setup-login.yaml
+# Wait for app to load
+- waitForAnimationToEnd:
+    timeout: 10000
+
+# Navigate home first to reset state (dismiss any open modals)
+- tapOn:
+    point: "10%,97%"
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Navigate to Comms tab (coordinate tap — text taps don't trigger nav in Expo Go)
+- tapOn:
+    point: "70%,97%"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Assert Comms screen loaded — header says "Comms", sub-tab says "Calls"
+- assertVisible:
+    label: "Comms"
+- assertVisible:
+    label: "Calls"
+
+# Make sure Calls sub-tab is active
+- tapOn:
+    label: "Calls"
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Wait for call list to load (FlatRow items)
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Tap on a call item
+- tapOn:
+    label: ".*Amit.*"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Assert call detail screen loaded
+- assertVisible:
+    label: "Call Details"
+
+# Assert Follow-ups section is always visible
+- assertVisible:
+    label: "Follow-ups"
+
+# Assert Transcript section is always visible
+- assertVisible:
+    label: "Transcript"
+
+# Scroll down to see full content including action buttons
+- swipe:
+    start: "50%,70%"
+    end: "50%,30%"
+- waitForAnimationToEnd:
+    timeout: 2000
+
+# Assert action buttons are visible
+- assertVisible:
+    label: "Create Follow-up"
+
+# Navigate back (back button is a ChevronLeft in a rounded container)
+- tapOn:
+    point: "10%,7%"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Assert we're back on Comms screen
+- assertVisible:
+    label: "Comms"

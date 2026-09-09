@@ -1,0 +1,26 @@
+appId: com.vaibhavmaddhi.versa
+name: TeamScreen - Real Data
+---
+- runFlow: setup-login.yaml
+- waitForAnimationToEnd:
+    timeout: 10000
+# Navigate to Team tab (coordinate tap — text taps don't trigger nav in Expo Go)
+- tapOn:
+    point: "30%,97%"
+- waitForAnimationToEnd:
+    timeout: 5000
+- assertVisible:
+    label: "Team"
+# Members section header
+- assertVisible:
+    label: "MEMBERS.*"
+# Known team member name
+- assertVisible:
+    label: "Priya"
+# Task board heading and tabs
+- assertVisible:
+    label: "TASK BOARD"
+- assertVisible:
+    label: "To Do"
+- assertVisible:
+    label: "In Progress"

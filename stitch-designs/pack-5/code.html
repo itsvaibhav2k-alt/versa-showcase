@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>Chief of Staff - Mobile Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13a4ec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101c22", 
+                        "card-dark": "#18242b", 
+                        "border-dark": "#2a373f", 
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "body": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.375rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .glass-panel {
+            background: rgba(24, 36, 43, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+        .safe-area-bottom {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 antialiased overflow-hidden h-screen flex flex-col">
+<header class="flex-none px-5 py-4 flex items-center justify-between z-20 bg-background-dark/80 backdrop-blur-md sticky top-0">
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-full bg-cover bg-center border border-slate-700" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBdPebnXdTgx1VoLv4Zatx1WxdLel4KjaKf-oNrth48dEZdsLdFx-4_Zxo6rzinmT4LucKKWI84zdLW3L01ezRGyeLADxMbsOwf9uZJG7OD5Ayv8XB_CeoPdGf2ygvLMZFB2PoBw_iCDCsNmh5gjSoWrbgHjPFfMtGYTzg_9Sm9HngTT5VNOBnQ6B3GGagyLsh5ZQ5RwZYw4FWqLJ5WNuBgfQNCXFNWFt_8d2wMBQrQKY9qBU8HMqv318f4n_sqVle8PrLCy-szLdR9");'></div>
+<div>
+<h1 class="text-sm font-semibold text-white leading-none">Alexander</h1>
+<p class="text-xs text-slate-400">Good morning</p>
+</div>
+</div>
+<button class="p-2 rounded-full bg-white/5 border border-white/10 text-white">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+</button>
+</header>
+<main class="flex-1 overflow-y-auto overflow-x-hidden pb-32 scrollbar-hide">
+<div class="px-5 space-y-6 pt-2">
+<section>
+<div class="flex items-center justify-between mb-3">
+<h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Daily Intelligence</h2>
+<div class="flex items-center gap-1.5 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+<span class="block size-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+<span class="text-[10px] font-bold text-emerald-500 uppercase tracking-wider">Live</span>
+</div>
+</div>
+<div class="relative overflow-hidden rounded-2xl bg-card-dark border border-border-dark shadow-lg">
+<div class="absolute -right-4 -top-4 text-primary/5">
+<span class="material-symbols-outlined text-[140px]">auto_awesome</span>
+</div>
+<div class="relative p-5 z-10">
+<h3 class="text-xl font-medium leading-snug text-slate-100 mb-4">
+<span class="text-primary font-semibold">3 critical decisions</span> on Q3 budget allocation pending.
+                        </h3>
+<p class="text-sm text-slate-400 mb-4 leading-relaxed">
+                            Market analysis indicates a 5% upturn in your sector, suggesting a strategic pivot is timely.
+                        </p>
+<div class="grid grid-cols-2 gap-3">
+<div class="p-3 rounded-xl bg-white/5 border border-white/10">
+<span class="material-symbols-outlined text-primary text-xl mb-1">mail</span>
+<p class="text-[10px] text-slate-400 uppercase tracking-wider mb-0.5">Inbox</p>
+<p class="text-xs font-semibold text-white">Zero Achieved</p>
+</div>
+<div class="p-3 rounded-xl bg-white/5 border border-white/10">
+<span class="material-symbols-outlined text-emerald-400 text-xl mb-1">trending_up</span>
+<p class="text-[10px] text-slate-400 uppercase tracking-wider mb-0.5">Growth</p>
+<p class="text-xs font-semibold text-white">+5.2% Sector</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section>
+<div class="flex items-center justify-between mb-3">
+<h4 class="text-lg font-semibold text-white">Priority Actions</h4>
+<span class="text-xs text-slate-400">3 Pending</span>
+</div>
+<div class="space-y-3">
+<div class="group active:scale-[0.98] transition-transform p-4 rounded-xl bg-card-dark border border-border-dark active:border-primary/50">
+<div class="flex justify-between items-start mb-2">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-red-500/10 text-red-400 border border-red-500/20 uppercase tracking-wide">
+                                2:00 PM Deadline
+                            </span>
+<span class="material-symbols-outlined text-slate-500 text-[18px]">more_horiz</span>
+</div>
+<h5 class="text-base font-medium text-white mb-1">Sign Vendor Contract</h5>
+<p class="text-xs text-slate-400 mb-3">Acme Corp • Legal approved revisions.</p>
+<div class="flex items-center justify-between">
+<span class="inline-flex items-center gap-1 text-[10px] text-slate-500">
+<span class="material-symbols-outlined text-[12px]">psychology</span>
+                                Expiry imminent
+                            </span>
+<button class="bg-primary text-white text-xs font-bold px-3 py-1.5 rounded-lg">Review</button>
+</div>
+</div>
+<div class="group active:scale-[0.98] transition-transform p-4 rounded-xl bg-card-dark border border-border-dark active:border-primary/50">
+<div class="flex justify-between items-start mb-2">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-orange-500/10 text-orange-400 border border-orange-500/20 uppercase tracking-wide">
+                                EOD Deadline
+                            </span>
+<div class="flex -space-x-1.5">
+<img alt="Avatar" class="size-5 rounded-full ring-1 ring-card-dark grayscale opacity-80" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDOjsaa3VzsaYMebxxcBbWa52t0GPzzNDIwB6vvuhOZNywN5yMgP4hgNTqbtZVig3TFS4qh1695yp5u9qUBeFYG7Ljef4P_w4UtmN63IUfvJaL3hOtPguv-SAwGa3wssSNlVj06gP2QwMdCs5HX4-CZIgKk-JjBUYmsxh6ZrZutpLuMuNuXx946ATUqx80Le7YpR494U-XxUn2tWtK4XuMeZMChvDheD-A1eJCggKObxVzhPDL83OjEVGbnPk1H_j3aGJmJaQT9IY3Y"/>
+<img alt="Avatar" class="size-5 rounded-full ring-1 ring-card-dark grayscale opacity-80" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAik2zHi49zeqntB1yhOAXRQb-uog7GvkId5Y3GnPuNAl9gufvo7MZHYr2JWl7xCUjDHYBC0qiopkXCLuWqs1mAUQ0wqT3WQgaWIIKY_OA4kuN7K6Vy5qaKKEMjIiGJJXXwQYFShgxhoCgclB4Fp8zhT0xk4txN5VKnlICBzi8Eql69hj-wPVS315eMZNqyKHBfymK8KrBXSWdrLQvBKIpItsW3199vr98CroUJG6O7nQMMSAVAmxU_6lJpmfqNxgvmhUGF7af9DXIg"/>
+</div>
+</div>
+<h5 class="text-base font-medium text-white mb-1">Approve Q3 Hiring Plan</h5>
+<p class="text-xs text-slate-400 mb-3">Engineering Headcount Confirmation.</p>
+<div class="flex items-center justify-between">
+<span class="inline-flex items-center gap-1 text-[10px] text-slate-500">
+<span class="material-symbols-outlined text-[12px]">psychology</span>
+                                Board meeting prep
+                            </span>
+</div>
+</div>
+</div>
+</section>
+<section>
+<div class="flex items-center justify-between mb-3">
+<h4 class="text-lg font-semibold text-white">Schedule</h4>
+<span class="text-xs text-slate-400">Oct 24</span>
+</div>
+<div class="flex overflow-x-auto gap-3 pb-2 -mx-5 px-5 scrollbar-hide snap-x">
+<div class="snap-start shrink-0 w-64 p-4 rounded-xl bg-primary/10 border border-primary/20 relative">
+<div class="flex justify-between items-start mb-2">
+<span class="text-[10px] font-bold text-primary uppercase tracking-wider">Now • 09:00</span>
+<span class="size-1.5 bg-primary rounded-full animate-pulse"></span>
+</div>
+<h5 class="text-white font-medium text-sm mb-0.5">Executive Weekly Sync</h5>
+<p class="text-slate-400 text-xs mb-3">Zoom • 5 Attendees</p>
+<button class="w-full bg-primary/90 text-white text-xs font-bold py-2 rounded-lg flex items-center justify-center gap-1.5">
+<span class="material-symbols-outlined text-[14px]">videocam</span> Join
+                        </button>
+</div>
+<div class="snap-start shrink-0 w-64 p-4 rounded-xl bg-card-dark border border-border-dark">
+<div class="flex justify-between items-start mb-2">
+<span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">10:30 - 11:30</span>
+</div>
+<h5 class="text-slate-200 font-medium text-sm mb-0.5">Deep Work Block</h5>
+<p class="text-slate-500 text-xs">No interruptions allowed</p>
+</div>
+<div class="snap-start shrink-0 w-64 p-4 rounded-xl bg-card-dark border border-border-dark">
+<div class="flex justify-between items-start mb-2">
+<span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">12:00 - 13:00</span>
+</div>
+<h5 class="text-slate-200 font-medium text-sm mb-0.5">Lunch with Investors</h5>
+<p class="text-slate-500 text-xs">Le Bernardin • NYC</p>
+</div>
+</div>
+</section>
+<div class="h-16"></div> 
+</div>
+</main>
+<div class="absolute bottom-[calc(4rem+env(safe-area-inset-bottom))] left-0 right-0 px-4 z-30 pointer-events-none">
+<div class="glass-panel w-full rounded-2xl shadow-2xl border border-white/10 p-2 flex items-center gap-3 pointer-events-auto">
+<div class="size-10 rounded-xl bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center shrink-0 shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined text-white text-[20px]">smart_toy</span>
+</div>
+<input class="bg-transparent border-none focus:ring-0 text-white placeholder-slate-400 w-full text-sm h-10 font-normal" placeholder="Ask Chief of Staff..." type="text"/>
+<button class="size-9 rounded-lg bg-white/10 active:bg-white/20 flex items-center justify-center text-white transition-colors">
+<span class="material-symbols-outlined text-[20px]">mic</span>
+</button>
+</div>
+</div>
+<nav class="flex-none bg-card-dark border-t border-border-dark z-40 safe-area-bottom">
+<div class="flex items-center justify-around py-2">
+<a class="flex flex-col items-center gap-1 p-2 text-primary" href="#">
+<span class="material-symbols-outlined text-[24px]">dashboard</span>
+<span class="text-[10px] font-medium">Home</span>
+</a>
+<a class="flex flex-col items-center gap-1 p-2 text-slate-500 hover:text-slate-300" href="#">
+<span class="material-symbols-outlined text-[24px]">group</span>
+<span class="text-[10px] font-medium">Team</span>
+</a>
+<a class="flex flex-col items-center gap-1 p-2 text-slate-500 hover:text-slate-300" href="#">
+<span class="material-symbols-outlined text-[24px]">call</span>
+<span class="text-[10px] font-medium">Calls</span>
+</a>
+<a class="flex flex-col items-center gap-1 p-2 text-slate-500 hover:text-slate-300 relative" href="#">
+<span class="material-symbols-outlined text-[24px]">inbox</span>
+<span class="text-[10px] font-medium">Inbox</span>
+<span class="absolute top-1 right-2 size-2 bg-primary rounded-full border border-card-dark"></span>
+</a>
+</div>
+</nav>
+<div class="fixed top-0 right-0 -z-10 w-[300px] h-[300px] bg-primary/10 rounded-full blur-[80px] pointer-events-none"></div>
+<div class="fixed bottom-0 left-0 -z-10 w-[200px] h-[200px] bg-blue-600/10 rounded-full blur-[60px] pointer-events-none"></div>
+
+</body></html>

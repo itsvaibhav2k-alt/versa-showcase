@@ -1,0 +1,24 @@
+appId: com.vaibhavmaddhi.versa
+name: CommandScreen - Empty State
+---
+- runFlow: setup-login.yaml
+- waitForAnimationToEnd:
+    timeout: 10000
+# Navigate to Command tab (coordinate tap — FAB center)
+- tapOn:
+    point: "50%,97%"
+- waitForAnimationToEnd:
+    timeout: 5000
+# Screen heading is "Versa" (not "Command")
+- assertVisible:
+    label: "Versa"
+# Subtitle
+- assertVisible:
+    label: "Your AI assistant"
+# Empty state text
+- assertVisible:
+    label: ".*Ask me anything.*"
+# Input bar placeholder
+- assertVisible:
+    label: ".*Ask anything.*"
+    optional: true

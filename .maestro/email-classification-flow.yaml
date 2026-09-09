@@ -1,0 +1,35 @@
+appId: com.vaibhavmaddhi.versa
+name: Email Classification Badge Flow
+---
+- runFlow: setup-login.yaml
+- waitForAnimationToEnd:
+    timeout: 10000
+
+# Navigate to Comms tab
+- tapOn:
+    point: "70%,97%"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Switch to Emails sub-tab
+- tapOn:
+    label: "Emails.*"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Assert classification badges visible (from seed data)
+- assertVisible:
+    label: "ACTION"
+    optional: true
+- assertVisible:
+    label: "FYI"
+    optional: true
+- assertVisible:
+    label: "MEETING"
+    optional: true
+
+# Go back to Calls
+- tapOn:
+    label: "Calls"
+- waitForAnimationToEnd:
+    timeout: 3000

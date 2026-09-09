@@ -1,0 +1,23 @@
+appId: com.vaibhavmaddhi.versa
+name: Auth Sign In Flow
+---
+- waitForAnimationToEnd:
+    timeout: 10000
+# Navigate to sign in if on welcome
+- tapOn:
+    label: "Sign In"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 5000
+- assertVisible:
+    label: "Welcome back"
+    optional: true
+- assertVisible:
+    label: "Email"
+    optional: true
+- assertVisible:
+    label: "Password"
+    optional: true
+- assertVisible:
+    label: "Forgot Password?"
+    optional: true

@@ -1,0 +1,61 @@
+appId: com.vaibhavmaddhi.versa
+name: All Tasks View Flow
+---
+- runFlow: setup-login.yaml
+# Wait for app to load on Home screen
+- waitForAnimationToEnd:
+    timeout: 10000
+
+# Tap "See all" link in the task section
+- tapOn:
+    label: "See all"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Assert all tasks screen opened
+- assertVisible:
+    label: "All Tasks"
+- assertVisible:
+    label: "Close"
+
+# Assert total count text (e.g. "3 tasks total")
+- assertVisible:
+    label: ".*total.*"
+
+# Assert UnderlineTabs filter tabs are visible
+- assertVisible:
+    label: "All"
+- assertVisible:
+    label: "To Do"
+- assertVisible:
+    label: "In Progress"
+- assertVisible:
+    label: "Done"
+
+# Tap the "To Do" filter
+- tapOn:
+    label: "To Do"
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Tap the "Done" filter
+- tapOn:
+    label: "Done"
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Tap "All" to reset
+- tapOn:
+    label: "All"
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Close the screen
+- tapOn:
+    label: "Close"
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Should be back on Home
+- assertVisible:
+    label: ".*Satya.*"

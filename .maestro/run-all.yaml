@@ -1,0 +1,28 @@
+appId: com.vaibhavmaddhi.versa
+name: Full Versa Test Suite
+---
+# Sign in first (skips if already authenticated)
+- runFlow: setup-login.yaml
+- runFlow: home-screen.yaml
+- runFlow: team-screen.yaml
+- runFlow: calls-screen.yaml
+- runFlow: settings-screen.yaml
+- runFlow: command-screen.yaml
+- runFlow: notifications-flow.yaml
+- runFlow: call-detail-flow.yaml
+- runFlow: task-create-flow.yaml
+- runFlow: reminder-create-flow.yaml
+- runFlow: all-tasks-flow.yaml
+- runFlow: delegate-flow.yaml
+- runFlow: calendar-flow.yaml
+- runFlow: settings-integrations.yaml
+- runFlow: webhook-call-detail-flow.yaml
+- runFlow: morning-briefing-flow.yaml
+- runFlow: settings-webhook-flow.yaml
+- runFlow: reminders-flow.yaml
+- runFlow: search-flow.yaml
+- runFlow: calendar-full-flow.yaml
+- runFlow: notification-filters-flow.yaml
+- runFlow: email-classification-flow.yaml
+- runFlow: email-send-flow.yaml
+- runFlow: call-initiate-flow.yaml

@@ -1,0 +1,42 @@
+appId: com.vaibhavmaddhi.versa
+name: Notification Filter Flow
+---
+- runFlow: setup-login.yaml
+- waitForAnimationToEnd:
+    timeout: 10000
+
+# Navigate to notifications (bell icon in header)
+# The bell is at approximately top-right of dashboard header
+- tapOn:
+    id: "notification-bell"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Assert notifications screen
+- assertVisible:
+    label: "Notifications"
+
+# Assert filter chips visible
+- assertVisible:
+    label: "All"
+- assertVisible:
+    label: "Tasks"
+
+# Tap "Tasks" filter
+- tapOn:
+    label: "Tasks"
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Tap "All" to reset
+- tapOn:
+    label: "All"
+- waitForAnimationToEnd:
+    timeout: 2000
+
+# Go back
+- tapOn:
+    point: "5%,7%"
+- waitForAnimationToEnd:
+    timeout: 3000

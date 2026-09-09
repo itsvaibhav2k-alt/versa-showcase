@@ -1,0 +1,586 @@
+{
+  "name": "Daily Briefing",
+  "nodes": [
+    {
+      "id": "c1b2c3d4-3333-4000-8000-000000000001",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [250, 300],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 7 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "c1b2c3d4-3333-4000-8000-000000000017",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 500],
+      "parameters": {
+        "path": "generate-briefing",
+        "httpMethod": "POST",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "webhookId": "generate-briefing"
+    },
+    {
+      "id": "c1b2c3d4-3333-4000-8000-000000000018",
+      "name": "Fetch Requesting User",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 500],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/users?id=eq.{{ $json.body?.user_id || $json.user_id }}&select=id,full_name,email,organization_id,expo_push_token,timezone",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "c1b2c3d4-3333-4000-8000-000000000002",
+      "name": "Fetch Active Users",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/users?is_active=eq.true&select=id,full_name,email,organization_id,expo_push_token,timezone",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "c1b2c3d4-3333-4000-8000-000000000003",
+      "name": "Loop Over Users",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [750, 300],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "c1b2c3d4-3333-4000-8000-000000000004",
+      "name": "Check Existing Digest",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1000, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/digests?user_id=eq.{{ $json.id }}&digest_type=eq.morning&created_at=gte.{{ new Date(new Date().setHours(0,0,0,0)).toISOString() }}&select=id",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "c1b2c3d4-3333-4000-8000-000000000005",
+      "name": "Digest Already Exists?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1250, 300],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-1",
+              "leftValue": "={{ $json.length || 0 }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "c1b2c3d4-3333-4000-8000-000000000006",
+      "name": "Fetch Pending Tasks",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1500, 100],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/tasks?organization_id=eq.{{ $('Loop Over Users').item.json.organization_id }}&status=in.(todo,in_progress)&select=id,title,priority,status,due_date,assigned_to",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "c1b2c3d4-3333-4000-8000-000000000007",
+      "name": "Fetch Today Calendar Events",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1500, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/calendar_events?organization_id=eq.{{ $('Loop Over Users').item.json.organization_id }}&start_time=gte.{{ new Date(new Date().setHours(0,0,0,0)).toISOString() }}&start_time=lte.{{ new Date(new Date().setHours(23,59,59,999)).toISOString() }}&select=id,title,start_time,end_time,location,attendees",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "c1b2c3d4-3333-4000-8000-000000000008",
+      "name": "Fetch Pending Follow Ups",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1500, 500],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/follow_ups?organization_id=eq.{{ $('Loop Over Users').item.json.organization_id }}&status=eq.pending&select=id,action,due_date,call_log_id",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "c1b2c3d4-3333-4000-8000-000000000009",
+      "name": "Fetch Upcoming Reminders",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1500, 700],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/reminders?user_id=eq.{{ $('Loop Over Users').item.json.id }}&is_fired=eq.false&remind_at=gte.now()&remind_at=lte.{{ new Date(Date.now() + 86400000).toISOString() }}&select=id,title,body,remind_at",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "c1b2c3d4-3333-4000-8000-000000000010",
+      "name": "Merge Digest Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1750, 300],
+      "parameters": {
+        "jsCode": "const tasks = $('Fetch Pending Tasks').first().json;\nconst events = $('Fetch Today Calendar Events').first().json;\nconst followUps = $('Fetch Pending Follow Ups').first().json;\nconst reminders = $('Fetch Upcoming Reminders').first().json;\nconst user = $('Loop Over Users').item.json;\n\nconst digestData = {\n  user_id: user.id,\n  user_name: user.full_name,\n  organization_id: user.organization_id,\n  expo_push_token: user.expo_push_token,\n  date: new Date().toISOString().split('T')[0],\n  tasks: Array.isArray(tasks) ? tasks : [],\n  calendar_events: Array.isArray(events) ? events : [],\n  follow_ups: Array.isArray(followUps) ? followUps : [],\n  reminders: Array.isArray(reminders) ? reminders : []\n};\n\nreturn [{ json: digestData }];"
+      }
+    },
+    {
+      "id": "c1b2c3d4-3333-4000-8000-000000000011",
+      "name": "Generate Digest with Claude",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2000, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-api-key", "value": "={{ $env.CLAUDE_API_KEY }}" },
+            { "name": "anthropic-version", "value": "2023-06-01" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"claude-sonnet-4-20250514\",\n  \"max_tokens\": 1024,\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Generate a concise morning briefing for {{ $json.user_name }} for {{ $json.date }}. Here is the data:\\n\\nTasks ({{ $json.tasks.length }}): {{ JSON.stringify($json.tasks) }}\\n\\nCalendar Events ({{ $json.calendar_events.length }}): {{ JSON.stringify($json.calendar_events) }}\\n\\nFollow Ups ({{ $json.follow_ups.length }}): {{ JSON.stringify($json.follow_ups) }}\\n\\nReminders ({{ $json.reminders.length }}): {{ JSON.stringify($json.reminders) }}\\n\\nFormat as a friendly morning briefing. Start with a greeting, then summarize each section. Highlight urgent items. Keep it brief and actionable. Return plain text, no markdown.\"\n    }\n  ]\n}",
+        "options": {}
+      }
+    },
+    {
+      "id": "c1b2c3d4-3333-4000-8000-000000000012",
+      "name": "Parse Claude Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2250, 300],
+      "parameters": {
+        "jsCode": "const claudeResponse = $input.first().json;\nconst digestData = $('Merge Digest Data').first().json;\n\nlet summary = '';\ntry {\n  if (claudeResponse.content && claudeResponse.content[0]) {\n    summary = claudeResponse.content[0].text;\n  }\n} catch (e) {\n  summary = 'Good morning! Your daily digest is ready. Check your tasks and calendar for today.';\n}\n\nreturn [{\n  json: {\n    user_id: digestData.user_id,\n    organization_id: digestData.organization_id,\n    expo_push_token: digestData.expo_push_token,\n    summary: summary,\n    content: {\n      tasks: digestData.tasks,\n      calendar_events: digestData.calendar_events,\n      follow_ups: digestData.follow_ups,\n      reminders: digestData.reminders,\n      generated_at: new Date().toISOString()\n    }\n  }\n}];"
+      }
+    },
+    {
+      "id": "c1b2c3d4-3333-4000-8000-000000000013",
+      "name": "Insert Digest Record",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2500, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/digests",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=representation" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"organization_id\": \"{{ $json.organization_id }}\",\n  \"user_id\": \"{{ $json.user_id }}\",\n  \"digest_type\": \"morning\",\n  \"content\": {{ JSON.stringify($json.content) }},\n  \"summary\": {{ JSON.stringify($json.summary) }},\n  \"delivered_at\": \"{{ new Date().toISOString() }}\"\n}",
+        "options": {}
+      }
+    },
+    {
+      "id": "c1b2c3d4-3333-4000-8000-000000000014",
+      "name": "Insert Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2750, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/notifications",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=representation" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"organization_id\": \"{{ $('Parse Claude Response').item.json.organization_id }}\",\n  \"user_id\": \"{{ $('Parse Claude Response').item.json.user_id }}\",\n  \"title\": \"Good Morning! Your Daily Digest\",\n  \"body\": {{ JSON.stringify($('Parse Claude Response').item.json.summary.substring(0, 200)) }},\n  \"channel\": \"push\",\n  \"category\": \"digest\",\n  \"reference_type\": \"digest\"\n}",
+        "options": {}
+      }
+    },
+    {
+      "id": "c1b2c3d4-3333-4000-8000-000000000015",
+      "name": "Send Expo Push",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [3000, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://exp.host/--/api/v2/push/send",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"to\": \"{{ $('Parse Claude Response').item.json.expo_push_token }}\",\n  \"title\": \"Good Morning! Your Daily Digest\",\n  \"body\": {{ JSON.stringify($('Parse Claude Response').item.json.summary.substring(0, 150)) }},\n  \"data\": {\n    \"type\": \"digest\",\n    \"screen\": \"DigestDetail\"\n  },\n  \"sound\": \"default\"\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "c1b2c3d4-3333-4000-8000-000000000016",
+      "name": "Log Digest Event",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [3250, 300],
+      "parameters": {
+        "source": "database",
+        "workflowId": "={{ $env.EVENT_LOGGER_WORKFLOW_ID }}",
+        "workflowInputs": {
+          "value": {
+            "event_type": "digest.generated",
+            "source_workflow": "daily-briefing",
+            "organization_id": "={{ $('Parse Claude Response').item.json.organization_id }}",
+            "payload": "={{ { user_id: $('Parse Claude Response').item.json.user_id, digest_type: 'morning' } }}"
+          }
+        }
+      },
+      "continueOnFail": true
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Active Users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Requesting User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Requesting User": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Active Users": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Users": {
+      "main": [
+        null,
+        [
+          {
+            "node": "Check Existing Digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Existing Digest": {
+      "main": [
+        [
+          {
+            "node": "Digest Already Exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Digest Already Exists?": {
+      "main": [
+        [
+          {
+            "node": "Fetch Pending Tasks",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch Today Calendar Events",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch Pending Follow Ups",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch Upcoming Reminders",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Pending Tasks": {
+      "main": [
+        [
+          {
+            "node": "Merge Digest Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Today Calendar Events": {
+      "main": [
+        [
+          {
+            "node": "Merge Digest Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Pending Follow Ups": {
+      "main": [
+        [
+          {
+            "node": "Merge Digest Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Upcoming Reminders": {
+      "main": [
+        [
+          {
+            "node": "Merge Digest Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Digest Data": {
+      "main": [
+        [
+          {
+            "node": "Generate Digest with Claude",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Digest with Claude": {
+      "main": [
+        [
+          {
+            "node": "Parse Claude Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Claude Response": {
+      "main": [
+        [
+          {
+            "node": "Insert Digest Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Digest Record": {
+      "main": [
+        [
+          {
+            "node": "Insert Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Notification": {
+      "main": [
+        [
+          {
+            "node": "Send Expo Push",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Expo Push": {
+      "main": [
+        [
+          {
+            "node": "Log Digest Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Digest Event": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    { "name": "scheduled" },
+    { "name": "webhook" },
+    { "name": "digest" },
+    { "name": "ai" }
+  ]
+}

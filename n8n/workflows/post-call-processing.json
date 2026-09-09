@@ -1,0 +1,488 @@
+{
+  "name": "Post-Call Processing",
+  "nodes": [
+    {
+      "id": "d1b2c3d4-4444-4000-8000-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "parameters": {
+        "path": "retell-call-completed",
+        "httpMethod": "POST",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "webhookId": "retell-call-completed"
+    },
+    {
+      "id": "d1b2c3d4-4444-4000-8000-000000000002",
+      "name": "Respond Immediately",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [500, 500],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"success\": true, \"message\": \"Call data received\" }",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    },
+    {
+      "id": "d1b2c3d4-4444-4000-8000-000000000003",
+      "name": "Extract Call Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 300],
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\n\nconst callData = {\n  retell_call_id: body.call_id || body.retell_call_id,\n  caller_name: body.from_name || body.caller_name || 'Unknown',\n  caller_phone: body.from_number || body.caller_phone || '',\n  direction: body.direction || 'inbound',\n  status: body.call_status || body.status || 'missed',\n  duration_seconds: body.duration_ms ? Math.round(body.duration_ms / 1000) : (body.duration_seconds || 0),\n  started_at: body.start_time || body.started_at || new Date().toISOString(),\n  ended_at: body.end_time || body.ended_at || new Date().toISOString(),\n  transcript: body.transcript || '',\n  recording_url: body.recording_url || null,\n  organization_id: body.metadata?.organization_id || body.organization_id,\n  user_id: body.metadata?.user_id || body.user_id\n};\n\nreturn [{ json: callData }];"
+      }
+    },
+    {
+      "id": "d1b2c3d4-4444-4000-8000-000000000004",
+      "name": "Check Duplicate Call",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [750, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/call_logs?retell_call_id=eq.{{ $json.retell_call_id }}&select=id",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "d1b2c3d4-4444-4000-8000-000000000005",
+      "name": "Is Duplicate?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1000, 300],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-1",
+              "leftValue": "={{ $json.length || 0 }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "d1b2c3d4-4444-4000-8000-000000000006",
+      "name": "Summarize with Claude",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1250, 200],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-api-key", "value": "={{ $env.CLAUDE_API_KEY }}" },
+            { "name": "anthropic-version", "value": "2023-06-01" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"claude-sonnet-4-20250514\",\n  \"max_tokens\": 1024,\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Analyze this phone call transcript and extract information.\\n\\nCaller: {{ $('Extract Call Data').item.json.caller_name }} ({{ $('Extract Call Data').item.json.caller_phone }})\\nCall Status: {{ $('Extract Call Data').item.json.status }}\\nDuration: {{ $('Extract Call Data').item.json.duration_seconds }}s\\n\\nTranscript:\\n{{ $('Extract Call Data').item.json.transcript }}\\n\\nReturn a JSON object with:\\n- summary: brief 1-2 sentence summary of the call\\n- action_items: array of strings, each an action item to follow up on\\n- urgency: one of 'low', 'medium', 'high'\\n- sentiment: one of 'positive', 'neutral', 'negative'\\n\\nReturn ONLY valid JSON, no markdown or extra text.\"\n    }\n  ]\n}",
+        "options": {}
+      }
+    },
+    {
+      "id": "d1b2c3d4-4444-4000-8000-000000000007",
+      "name": "Parse Claude Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1500, 200],
+      "parameters": {
+        "jsCode": "const claudeResponse = $input.first().json;\nconst callData = $('Extract Call Data').first().json;\n\nlet parsed = {\n  summary: 'Call received - requires review',\n  action_items: [],\n  urgency: 'medium',\n  sentiment: 'neutral'\n};\n\ntry {\n  const text = claudeResponse.content[0].text;\n  const jsonMatch = text.match(/\\{[\\s\\S]*\\}/);\n  if (jsonMatch) {\n    parsed = JSON.parse(jsonMatch[0]);\n  }\n} catch (e) {\n  // Use defaults\n}\n\nreturn [{\n  json: {\n    ...callData,\n    summary: parsed.summary,\n    action_items: parsed.action_items || [],\n    urgency: parsed.urgency || 'medium',\n    sentiment: parsed.sentiment || 'neutral'\n  }\n}];"
+      }
+    },
+    {
+      "id": "d1b2c3d4-4444-4000-8000-000000000008",
+      "name": "Insert Call Log",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1750, 200],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/call_logs",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=representation" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"organization_id\": \"{{ $json.organization_id }}\",\n  \"user_id\": \"{{ $json.user_id }}\",\n  \"caller_name\": {{ JSON.stringify($json.caller_name) }},\n  \"caller_phone\": \"{{ $json.caller_phone }}\",\n  \"direction\": \"{{ $json.direction }}\",\n  \"status\": \"{{ $json.status }}\",\n  \"duration_seconds\": {{ $json.duration_seconds }},\n  \"started_at\": \"{{ $json.started_at }}\",\n  \"ended_at\": \"{{ $json.ended_at }}\",\n  \"transcript\": {{ JSON.stringify($json.transcript) }},\n  \"summary\": {{ JSON.stringify($json.summary) }},\n  \"action_items\": {{ JSON.stringify($json.action_items) }},\n  \"sentiment\": \"{{ $json.sentiment }}\",\n  \"retell_call_id\": \"{{ $json.retell_call_id }}\",\n  \"recording_url\": {{ JSON.stringify($json.recording_url) }}\n}",
+        "options": {}
+      }
+    },
+    {
+      "id": "d1b2c3d4-4444-4000-8000-000000000009",
+      "name": "Has Action Items?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2000, 200],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-1",
+              "leftValue": "={{ $('Parse Claude Response').item.json.action_items.length || 0 }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "d1b2c3d4-4444-4000-8000-000000000010",
+      "name": "Prepare Action Items",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2250, 100],
+      "parameters": {
+        "jsCode": "const data = $('Parse Claude Response').first().json;\nconst callLogId = $('Insert Call Log').first().json[0]?.id || $('Insert Call Log').first().json.id;\n\nconst items = data.action_items.map(action => ({\n  json: {\n    organization_id: data.organization_id,\n    call_log_id: callLogId,\n    assigned_to: data.user_id,\n    action: action,\n    status: 'pending',\n    due_date: new Date(Date.now() + 86400000 * 2).toISOString()\n  }\n}));\n\nreturn items;"
+      }
+    },
+    {
+      "id": "d1b2c3d4-4444-4000-8000-000000000011",
+      "name": "Loop Over Action Items",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [2500, 100],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "d1b2c3d4-4444-4000-8000-000000000012",
+      "name": "Insert Follow Up",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2750, 100],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/follow_ups",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=representation" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"organization_id\": \"{{ $json.organization_id }}\",\n  \"call_log_id\": \"{{ $json.call_log_id }}\",\n  \"assigned_to\": \"{{ $json.assigned_to }}\",\n  \"action\": {{ JSON.stringify($json.action) }},\n  \"status\": \"pending\",\n  \"due_date\": \"{{ $json.due_date }}\"\n}",
+        "options": {}
+      }
+    },
+    {
+      "id": "d1b2c3d4-4444-4000-8000-000000000013",
+      "name": "Insert Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2250, 350],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/notifications",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=representation" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"organization_id\": \"{{ $('Parse Claude Response').item.json.organization_id }}\",\n  \"user_id\": \"{{ $('Parse Claude Response').item.json.user_id }}\",\n  \"title\": \"Missed Call from {{ $('Parse Claude Response').item.json.caller_name }}\",\n  \"body\": {{ JSON.stringify($('Parse Claude Response').item.json.summary) }},\n  \"channel\": \"push\",\n  \"category\": \"call\",\n  \"reference_type\": \"call_log\"\n}",
+        "options": {}
+      }
+    },
+    {
+      "id": "d1b2c3d4-4444-4000-8000-000000000014",
+      "name": "Fetch User Push Token",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2500, 350],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/users?id=eq.{{ $('Parse Claude Response').item.json.user_id }}&select=expo_push_token",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "d1b2c3d4-4444-4000-8000-000000000015",
+      "name": "Send Expo Push",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2750, 350],
+      "parameters": {
+        "method": "POST",
+        "url": "https://exp.host/--/api/v2/push/send",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"to\": \"{{ $json[0]?.expo_push_token || $json.expo_push_token }}\",\n  \"title\": \"Missed Call from {{ $('Parse Claude Response').item.json.caller_name }}\",\n  \"body\": {{ JSON.stringify($('Parse Claude Response').item.json.summary) }},\n  \"data\": {\n    \"type\": \"missed_call\",\n    \"call_id\": \"{{ $('Parse Claude Response').item.json.retell_call_id }}\"\n  },\n  \"sound\": \"default\"\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "d1b2c3d4-4444-4000-8000-000000000016",
+      "name": "Log Call Event",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [3000, 350],
+      "parameters": {
+        "source": "database",
+        "workflowId": "={{ $env.EVENT_LOGGER_WORKFLOW_ID }}",
+        "workflowInputs": {
+          "value": {
+            "event_type": "call.processed",
+            "source_workflow": "post-call-processing",
+            "organization_id": "={{ $('Parse Claude Response').item.json.organization_id }}",
+            "payload": "={{ { retell_call_id: $('Parse Claude Response').item.json.retell_call_id, caller: $('Parse Claude Response').item.json.caller_name, status: $('Parse Claude Response').item.json.status, action_items_count: $('Parse Claude Response').item.json.action_items.length } }}"
+          }
+        }
+      },
+      "continueOnFail": true
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Respond Immediately",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Extract Call Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Call Data": {
+      "main": [
+        [
+          {
+            "node": "Check Duplicate Call",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Duplicate Call": {
+      "main": [
+        [
+          {
+            "node": "Is Duplicate?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Duplicate?": {
+      "main": [
+        [
+          {
+            "node": "Summarize with Claude",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize with Claude": {
+      "main": [
+        [
+          {
+            "node": "Parse Claude Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Claude Response": {
+      "main": [
+        [
+          {
+            "node": "Insert Call Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Call Log": {
+      "main": [
+        [
+          {
+            "node": "Has Action Items?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Insert Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Action Items?": {
+      "main": [
+        [
+          {
+            "node": "Prepare Action Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Action Items": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Action Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Action Items": {
+      "main": [
+        null,
+        [
+          {
+            "node": "Insert Follow Up",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Follow Up": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Action Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Notification": {
+      "main": [
+        [
+          {
+            "node": "Fetch User Push Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch User Push Token": {
+      "main": [
+        [
+          {
+            "node": "Send Expo Push",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Expo Push": {
+      "main": [
+        [
+          {
+            "node": "Log Call Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    { "name": "webhook" },
+    { "name": "calls" },
+    { "name": "ai" }
+  ]
+}

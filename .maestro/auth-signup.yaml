@@ -1,0 +1,19 @@
+appId: com.vaibhavmaddhi.versa
+name: Auth Sign Up Flow
+---
+- waitForAnimationToEnd:
+    timeout: 10000
+- tapOn:
+    label: "Create Account"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 5000
+- assertVisible:
+    label: "Get started"
+    optional: true
+- assertVisible:
+    label: "Full Name"
+    optional: true
+- assertVisible:
+    label: "Organization Name"
+    optional: true

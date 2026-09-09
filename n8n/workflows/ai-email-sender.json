@@ -1,0 +1,230 @@
+{
+  "name": "AI Email Sender",
+  "nodes": [
+    {
+      "id": "e1b2c3d4-5555-4000-8000-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "parameters": {
+        "path": "send-email",
+        "httpMethod": "POST",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "webhookId": "send-email"
+    },
+    {
+      "id": "e1b2c3d4-5555-4000-8000-000000000002",
+      "name": "Validate Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 300],
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\n\nconst toEmail = body.to_email;\nconst intent = body.intent;\nconst userId = body.user_id;\nconst orgId = body.organization_id;\nconst toName = body.to_name || '';\nconst context = body.context || '';\nconst replyToId = body.reply_to_id || null;\n\nif (!toEmail || !intent) {\n  throw new Error('Missing required fields: to_email and intent are required');\n}\n\nif (!userId || !orgId) {\n  throw new Error('Missing required fields: user_id and organization_id are required');\n}\n\nreturn [{\n  json: {\n    to_email: toEmail,\n    to_name: toName,\n    intent: intent,\n    context: context,\n    user_id: userId,\n    organization_id: orgId,\n    reply_to_id: replyToId\n  }\n}];"
+      }
+    },
+    {
+      "id": "e1b2c3d4-5555-4000-8000-000000000003",
+      "name": "Draft Email with Claude",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [750, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-api-key", "value": "={{ $env.CLAUDE_API_KEY }}" },
+            { "name": "anthropic-version", "value": "2023-06-01" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"claude-sonnet-4-20250514\",\n  \"max_tokens\": 1024,\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Draft a professional email based on this intent:\\n\\nRecipient: {{ $json.to_name }} <{{ $json.to_email }}>\\nIntent: {{ $json.intent }}\\nAdditional Context: {{ $json.context }}\\n\\nReturn a JSON object with:\\n- subject: email subject line\\n- body_html: full HTML email body (use proper HTML tags, keep it professional)\\n- body_text: plain text version of the email body\\n\\nReturn ONLY valid JSON, no markdown or extra text.\"\n    }\n  ]\n}",
+        "options": {}
+      }
+    },
+    {
+      "id": "e1b2c3d4-5555-4000-8000-000000000004",
+      "name": "Parse Claude Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1000, 300],
+      "parameters": {
+        "jsCode": "const claudeResponse = $input.first().json;\nconst inputData = $('Validate Input').first().json;\n\nlet parsed = {\n  subject: 'Email from your assistant',\n  body_html: '<p>Email content could not be generated.</p>',\n  body_text: 'Email content could not be generated.'\n};\n\ntry {\n  const text = claudeResponse.content[0].text;\n  const jsonMatch = text.match(/\\{[\\s\\S]*\\}/);\n  if (jsonMatch) {\n    parsed = JSON.parse(jsonMatch[0]);\n  }\n} catch (e) {\n  // Use defaults\n}\n\nreturn [{\n  json: {\n    ...inputData,\n    subject: parsed.subject,\n    body_html: parsed.body_html,\n    body_text: parsed.body_text\n  }\n}];"
+      }
+    },
+    {
+      "id": "e1b2c3d4-5555-4000-8000-000000000005",
+      "name": "Send via Resend",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1250, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.RESEND_API_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"from\": \"{{ $env.FROM_EMAIL || 'assistant@yourdomain.com' }}\",\n  \"to\": [\"{{ $json.to_email }}\"],\n  \"subject\": {{ JSON.stringify($json.subject) }},\n  \"html\": {{ JSON.stringify($json.body_html) }},\n  \"text\": {{ JSON.stringify($json.body_text) }}\n}",
+        "options": {}
+      }
+    },
+    {
+      "id": "e1b2c3d4-5555-4000-8000-000000000006",
+      "name": "Insert Sent Email Record",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1500, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/sent_emails",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=representation" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"organization_id\": \"{{ $('Parse Claude Response').item.json.organization_id }}\",\n  \"user_id\": \"{{ $('Parse Claude Response').item.json.user_id }}\",\n  \"to_address\": \"{{ $('Parse Claude Response').item.json.to_email }}\",\n  \"to_name\": {{ JSON.stringify($('Parse Claude Response').item.json.to_name) }},\n  \"subject\": {{ JSON.stringify($('Parse Claude Response').item.json.subject) }},\n  \"body_text\": {{ JSON.stringify($('Parse Claude Response').item.json.body_text) }},\n  \"body_html\": {{ JSON.stringify($('Parse Claude Response').item.json.body_html) }},\n  \"status\": \"sent\",\n  \"ai_drafted\": true,\n  \"resend_id\": \"{{ $('Send via Resend').item.json.id }}\",\n  \"in_reply_to\": {{ $('Parse Claude Response').item.json.reply_to_id ? '\"' + $('Parse Claude Response').item.json.reply_to_id + '\"' : 'null' }},\n  \"sent_at\": \"{{ new Date().toISOString() }}\"\n}",
+        "options": {}
+      }
+    },
+    {
+      "id": "e1b2c3d4-5555-4000-8000-000000000007",
+      "name": "Log Email Event",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [1750, 300],
+      "parameters": {
+        "source": "database",
+        "workflowId": "={{ $env.EVENT_LOGGER_WORKFLOW_ID }}",
+        "workflowInputs": {
+          "value": {
+            "event_type": "email.sent",
+            "source_workflow": "ai-email-sender",
+            "organization_id": "={{ $('Parse Claude Response').item.json.organization_id }}",
+            "payload": "={{ { to: $('Parse Claude Response').item.json.to_email, subject: $('Parse Claude Response').item.json.subject, ai_drafted: true } }}"
+          }
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "e1b2c3d4-5555-4000-8000-000000000008",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [2000, 300],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"email_id\": \"{{ $('Insert Sent Email Record').item.json[0]?.id || $('Insert Sent Email Record').item.json.id }}\",\n  \"subject\": {{ JSON.stringify($('Parse Claude Response').item.json.subject) }},\n  \"preview\": {{ JSON.stringify($('Parse Claude Response').item.json.body_text.substring(0, 200)) }}\n}",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Input": {
+      "main": [
+        [
+          {
+            "node": "Draft Email with Claude",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Draft Email with Claude": {
+      "main": [
+        [
+          {
+            "node": "Parse Claude Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Claude Response": {
+      "main": [
+        [
+          {
+            "node": "Send via Resend",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send via Resend": {
+      "main": [
+        [
+          {
+            "node": "Insert Sent Email Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Sent Email Record": {
+      "main": [
+        [
+          {
+            "node": "Log Email Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Email Event": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    { "name": "webhook" },
+    { "name": "email" },
+    { "name": "ai" }
+  ]
+}

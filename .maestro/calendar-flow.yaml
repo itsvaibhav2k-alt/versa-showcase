@@ -1,0 +1,52 @@
+appId: com.vaibhavmaddhi.versa
+name: Calendar Vertical Timeline Flow
+---
+- runFlow: setup-login.yaml
+# Wait for app to load on Home screen
+- waitForAnimationToEnd:
+    timeout: 10000
+
+# Assert we're on the Home screen with the greeting
+- assertVisible:
+    label: ".*Satya.*"
+
+# Assert the schedule section is visible (vertical timeline)
+- assertVisible:
+    label: "SCHEDULE"
+
+# The WeekStreakRow shows day abbreviations (MON, TUE, etc.) with simplified 28px circles
+# Assert week day labels are visible — at least one day abbreviation
+- assertVisible:
+    label: "MON"
+
+# Tap on a different day in the week bar
+# The week bar position may have shifted with increased top padding (paddingTop 24)
+# Week bar is roughly at y=20% of screen
+- tapOn:
+    point: "18%,20%"
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# The schedule label should update to show the selected date's schedule
+
+# Tap the forward chevron to navigate to next week
+- tapOn:
+    point: "96%,20%"
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Tap the back chevron to navigate back
+- tapOn:
+    point: "4%,20%"
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Scroll down to verify content is intact
+- swipe:
+    start: "50%,70%"
+    end: "50%,30%"
+
+# Scroll back up
+- swipe:
+    start: "50%,30%"
+    end: "50%,70%"

@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Unified Team Hub</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13a4ec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101c22",
+                        "surface-dark": "#1c262c",
+                        "surface-light": "#ffffff",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "body": ["Inter", "sans-serif"]
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col overflow-hidden">
+<!-- Top Navigation -->
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark px-6 py-3 shrink-0">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-3 text-primary">
+<div class="size-8 rounded bg-primary/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-2xl">smart_toy</span>
+</div>
+<h2 class="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-tight">Chief of Staff</h2>
+</div>
+<!-- Global Search -->
+<label class="hidden md:flex flex-col min-w-40 !h-10 w-96">
+<div class="flex w-full flex-1 items-stretch rounded-lg h-full bg-slate-100 dark:bg-background-dark border border-transparent focus-within:border-primary/50 transition-colors">
+<div class="text-slate-400 flex items-center justify-center pl-4">
+<span class="material-symbols-outlined">search</span>
+</div>
+<input class="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg bg-transparent text-slate-900 dark:text-white focus:outline-0 border-none h-full placeholder:text-slate-400 px-4 text-sm" placeholder="Search tasks, teammates, or docs..."/>
+<div class="text-slate-400 flex items-center justify-center pr-4">
+<span class="text-xs bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-500 font-medium">/</span>
+</div>
+</div>
+</label>
+</div>
+<div class="flex items-center gap-6">
+<div class="hidden lg:flex items-center gap-6">
+<a class="text-primary text-sm font-semibold" href="#">Hub</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-sm font-medium transition-colors" href="#">Team</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-sm font-medium transition-colors" href="#">Projects</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-sm font-medium transition-colors" href="#">Reports</a>
+</div>
+<div class="h-6 w-px bg-slate-200 dark:bg-slate-700 hidden lg:block"></div>
+<div class="flex gap-2">
+<button class="flex items-center justify-center rounded-lg h-9 w-9 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500 border border-white dark:border-surface-dark"></span>
+</button>
+<button class="flex items-center justify-center rounded-lg h-9 w-9 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="ml-2 bg-center bg-no-repeat bg-cover rounded-full h-9 w-9 border border-slate-200 dark:border-slate-700" data-alt="User avatar of executive" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuB4O1pj-6vhtLiz4a8T34SEGFG-wV7iJdLesuhzFbWNY_Mtq0QZ_YNISFzo3zS9sA1aU1-Hoo-SS-XTK3Yg2_Embk4hgp66W-JjM0PLZmUcpDbUrrRly-jX2fcwYwvEI5x1V0qF7vAhYQqg8kS6IealTx3Ab9KFGfdEGLTGCqW5jCSP6Tn72RshPcWdwVUod2oEXe7U7psk6wO80aV6Cw_1SdoQo93QFD2kXufwoi_JOeCJb8cRHKCrkDArMFnlHO2aQvA3H27ZQMjK");'></div>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="flex flex-1 overflow-hidden">
+<!-- Left Panel: Command & Control (Team Status) -->
+<aside class="w-80 flex flex-col border-r border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark/50 overflow-y-auto hidden xl:flex">
+<div class="p-6 pb-2">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-slate-900 dark:text-white font-bold text-lg tracking-tight">Team Pulse</h3>
+<button class="text-primary hover:bg-primary/10 rounded p-1">
+<span class="material-symbols-outlined text-lg">filter_list</span>
+</button>
+</div>
+<div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 pl-1">Online Now (3)</div>
+</div>
+<div class="px-4 flex flex-col gap-3 pb-6">
+<!-- Team Member Card: Sarah -->
+<div class="group flex flex-col gap-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-surface-dark p-3 shadow-sm hover:border-primary/30 transition-all cursor-pointer">
+<div class="flex items-center gap-3">
+<div class="relative">
+<div class="h-10 w-10 rounded-full bg-cover bg-center" data-alt="Portrait of Sarah" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCXbxGAxef76BNbGl6hvh_sQ6agx9uVtsOF1paCD0PVccx6j-M-NZkME_eVwzfhHBAvuugs9g3EWHdOp08HnnOVwVztO9FKqctcBFvBEkfCDY5zOLCxF3T0Ewduj3r15NU2WzR3peMtou53E8XNYa_hn9jzCRVZ3A_ywqGZj37J4jSY5uj_iK6zpzy-dFuKLySzbWKR-jV_gIG7R0k2zRwKri9FPycZhmMa6JxFRaCyknMOBuovXtFjvokSmClAv7MA3xNz94ZgsHUQ')"></div>
+<div class="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-white dark:border-surface-dark bg-green-500"></div>
+</div>
+<div class="flex-1 min-w-0">
+<h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">Sarah Chen</h4>
+<p class="text-xs text-slate-500 dark:text-slate-400 truncate">Available for sync</p>
+</div>
+<button class="opacity-0 group-hover:opacity-100 p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 transition-opacity">
+<span class="material-symbols-outlined text-lg">chat</span>
+</button>
+</div>
+<div class="bg-slate-50 dark:bg-background-dark rounded-lg p-2 border border-slate-100 dark:border-slate-800">
+<div class="flex items-center gap-1.5 text-xs text-primary mb-1">
+<span class="material-symbols-outlined text-sm">bolt</span>
+<span class="font-medium">Current Focus</span>
+</div>
+<p class="text-xs text-slate-700 dark:text-slate-300 line-clamp-2">Finalizing Q3 Financial Model adjustments for board review.</p>
+</div>
+</div>
+<!-- Team Member Card: Raj -->
+<div class="group flex flex-col gap-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-surface-dark p-3 shadow-sm hover:border-primary/30 transition-all cursor-pointer opacity-75 hover:opacity-100">
+<div class="flex items-center gap-3">
+<div class="relative">
+<div class="h-10 w-10 rounded-full bg-cover bg-center" data-alt="Portrait of Raj" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCnE6JKOmuKQDPuLidN_WBWewbwxX1BJ3gEkDL_3fhJX_I-LQQXeIn0WiBCKFMqIba3nu9ERO0o6_oQmwBCnN_s3rGvfbsTPKTTmHQ6-BmQm3OXBzlDLTm1HUsReEkJX-VBl3aDrSrSuf25BuPFfNCltMpbYGN3A-G-Wm3kPD5PGjtVKJ3ZkRKOJ7Iz1b8gUZCBLBw_YQDI6jAHsLGcjXk7bwQjZjshG0_aOsLDMqEfgTHf-Iwyuq19__SxkHc4iHROKyFKcqsDTFgb')"></div>
+<div class="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-white dark:border-surface-dark bg-purple-500 flex items-center justify-center">
+<span class="material-symbols-outlined text-[8px] text-white">do_not_disturb_on</span>
+</div>
+</div>
+<div class="flex-1 min-w-0">
+<h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">Raj Patel</h4>
+<p class="text-xs text-slate-500 dark:text-slate-400 truncate">Focus Mode • Until 2pm</p>
+</div>
+</div>
+<div class="bg-slate-50 dark:bg-background-dark rounded-lg p-2 border border-slate-100 dark:border-slate-800">
+<div class="flex items-center gap-1.5 text-xs text-purple-400 mb-1">
+<span class="material-symbols-outlined text-sm">headphones</span>
+<span class="font-medium">Deep Work</span>
+</div>
+<p class="text-xs text-slate-700 dark:text-slate-300 line-clamp-1">Vendor contract review</p>
+</div>
+</div>
+<!-- Team Member Card: Mike -->
+<div class="group flex flex-col gap-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-surface-dark p-3 shadow-sm hover:border-primary/30 transition-all cursor-pointer">
+<div class="flex items-center gap-3">
+<div class="relative">
+<div class="h-10 w-10 rounded-full bg-cover bg-center" data-alt="Portrait of Mike" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAUiTYOR_JRRqIIHA4TutWTLX3B9N7tyRCbU_chRZhRNuA0JNdOVYFyPb_t-y67S9BXl2Hsblsj7xeLXkUxH36PpOt451XNWLUqQeMnt34djwMWr_ro3h5_vdsBe8icT0Wlljxbct8TTJBseVZ0IaHTv4YHZ5a9CtNJ3cLQy3o0Nmu2Gdt80nkcteWelkkRDxQtKQqr_UGwDGLXBT0tuBjymrnphQHOgpYl0C-S1vtRz0-bkaz8bd5wSUDvbCCwyjOqaVTlg0v1dBsR')"></div>
+<div class="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-white dark:border-surface-dark bg-green-500"></div>
+</div>
+<div class="flex-1 min-w-0">
+<h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">Mike Ross</h4>
+<p class="text-xs text-slate-500 dark:text-slate-400 truncate">Online • In Meeting</p>
+</div>
+</div>
+<div class="bg-slate-50 dark:bg-background-dark rounded-lg p-2 border border-slate-100 dark:border-slate-800">
+<div class="flex items-center gap-1.5 text-xs text-orange-400 mb-1">
+<span class="material-symbols-outlined text-sm">calendar_month</span>
+<span class="font-medium">Calendar</span>
+</div>
+<p class="text-xs text-slate-700 dark:text-slate-300 line-clamp-1">Client Onboarding Sync</p>
+</div>
+</div>
+</div>
+<div class="p-6 pt-2 border-t border-slate-200 dark:border-slate-800 mt-auto">
+<div class="flex items-center justify-between text-xs font-medium text-slate-500 mb-2">
+<span>Team Capacity</span>
+<span class="text-primary">82%</span>
+</div>
+<div class="h-1.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full" style="width: 82%"></div>
+</div>
+</div>
+</aside>
+<!-- Center Panel: Delegation Board -->
+<section class="flex-1 flex flex-col min-w-0 bg-background-light dark:bg-background-dark relative">
+<!-- Context Header -->
+<div class="px-8 py-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+<div>
+<div class="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-sm mb-1">
+<span class="material-symbols-outlined text-lg">calendar_today</span>
+<span>Today, Oct 24</span>
+</div>
+<h1 class="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Delegation Overview</h1>
+</div>
+<div class="flex gap-3">
+<button class="hidden md:flex items-center gap-2 px-4 py-2 bg-surface-light dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined text-lg">tune</span>
+                        Display
+                    </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-bold shadow-lg shadow-primary/20 transition-all">
+<span class="material-symbols-outlined text-lg">add</span>
+                        New Task
+                    </button>
+</div>
+</div>
+<!-- Task Board / Grid -->
+<div class="flex-1 overflow-y-auto px-8 pb-32">
+<!-- Metrics -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+<div class="bg-surface-light dark:bg-surface-dark p-4 rounded-xl border border-slate-200 dark:border-slate-700/50 flex items-center justify-between">
+<div>
+<p class="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">Pending Review</p>
+<p class="text-2xl font-bold text-slate-900 dark:text-white">4 Items</p>
+</div>
+<div class="h-10 w-10 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-500">
+<span class="material-symbols-outlined">pending_actions</span>
+</div>
+</div>
+<div class="bg-surface-light dark:bg-surface-dark p-4 rounded-xl border border-slate-200 dark:border-slate-700/50 flex items-center justify-between">
+<div>
+<p class="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">In Progress</p>
+<p class="text-2xl font-bold text-slate-900 dark:text-white">12 Active</p>
+</div>
+<div class="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">timelapse</span>
+</div>
+</div>
+<div class="bg-surface-light dark:bg-surface-dark p-4 rounded-xl border border-slate-200 dark:border-slate-700/50 flex items-center justify-between">
+<div>
+<p class="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">Completed Today</p>
+<p class="text-2xl font-bold text-slate-900 dark:text-white">8 Done</p>
+</div>
+<div class="h-10 w-10 rounded-full bg-green-500/10 flex items-center justify-center text-green-500">
+<span class="material-symbols-outlined">check_circle</span>
+</div>
+</div>
+</div>
+<!-- Kanban Sections -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Column: To Assign / Suggestions -->
+<div class="flex flex-col gap-4">
+<div class="flex items-center justify-between mb-2">
+<h3 class="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+<span class="h-2 w-2 rounded-full bg-slate-400"></span>
+                                Needs Delegation
+                            </h3>
+<span class="bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded text-xs font-bold">3</span>
+</div>
+<!-- Card 1 -->
+<div class="bg-white dark:bg-surface-dark rounded-xl p-4 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow group relative">
+<div class="flex justify-between items-start mb-2">
+<span class="bg-red-500/10 text-red-500 text-[10px] font-bold px-2 py-0.5 rounded border border-red-500/20 uppercase">High Priority</span>
+<button class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><span class="material-symbols-outlined text-lg">more_horiz</span></button>
+</div>
+<h4 class="font-semibold text-slate-900 dark:text-slate-100 mb-2 leading-snug">Review Q3 Strategic Deck</h4>
+<p class="text-sm text-slate-500 dark:text-slate-400 mb-4 line-clamp-2">The board meeting is in 2 days. Need a comprehensive review of slides 10-15.</p>
+<div class="border-t border-slate-100 dark:border-slate-700/50 pt-3 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-base">smart_toy</span>
+<span class="text-xs text-primary font-medium">Suggestion: Sarah</span>
+</div>
+<button class="text-xs font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 px-3 py-1.5 rounded transition-colors">Assign</button>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-white dark:bg-surface-dark rounded-xl p-4 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start mb-2">
+<span class="bg-slate-100 dark:bg-slate-800 text-slate-500 text-[10px] font-bold px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 uppercase">Routine</span>
+</div>
+<h4 class="font-semibold text-slate-900 dark:text-slate-100 mb-2 leading-snug">Schedule Quarterly All-Hands</h4>
+<p class="text-sm text-slate-500 dark:text-slate-400 mb-4 line-clamp-2">Coordinate availability with leadership team for next month.</p>
+<div class="border-t border-slate-100 dark:border-slate-700/50 pt-3 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-base">smart_toy</span>
+<span class="text-xs text-primary font-medium">Suggestion: Mike</span>
+</div>
+<button class="text-xs font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 px-3 py-1.5 rounded transition-colors">Assign</button>
+</div>
+</div>
+</div>
+<!-- Column: In Progress -->
+<div class="flex flex-col gap-4">
+<div class="flex items-center justify-between mb-2">
+<h3 class="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+<span class="h-2 w-2 rounded-full bg-primary"></span>
+                                In Flight
+                            </h3>
+<span class="bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded text-xs font-bold">5</span>
+</div>
+<!-- Card 3 -->
+<div class="bg-white dark:bg-surface-dark rounded-xl p-4 border border-slate-200 dark:border-slate-700 shadow-sm hover:border-primary/50 transition-colors">
+<div class="flex justify-between items-start mb-2">
+<span class="bg-primary/10 text-primary text-[10px] font-bold px-2 py-0.5 rounded border border-primary/20 uppercase">Critical</span>
+<div class="h-6 w-6 rounded-full bg-cover bg-center" data-alt="Avatar Raj" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB-VRQcbzkPCiP22TBPacNdM3upgvRIrRO-avvqViTxjzdmnHJ7CLyrbiXtIi0QrbAIEv6LT8yEH1ZLp_22Cyy490QCmsESBkjVKxyro43Jxfx5Ga380FSzl4P4rOFo7XfaZuE_x30NtoFxmn0ThqP47XJPChAkFlkAodLrWpduEfYO0G5F_eJftv5zMakZpmGg8PAhC-ALMCR-9gJ6zlNi_MHin0wkUbh5Tk1YinVNFgZ-NCXkcI-UHqpku707PqPUQ2MfGASMUhEj')"></div>
+</div>
+<h4 class="font-semibold text-slate-900 dark:text-slate-100 mb-2 leading-snug">Vendor Contract Negotiation</h4>
+<div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 mb-3">
+<div class="bg-primary h-1.5 rounded-full" style="width: 65%"></div>
+</div>
+<div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+<span>Due Tomorrow</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">forum</span> 2</span>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="bg-white dark:bg-surface-dark rounded-xl p-4 border border-slate-200 dark:border-slate-700 shadow-sm">
+<div class="flex justify-between items-start mb-2">
+<span class="bg-purple-500/10 text-purple-500 text-[10px] font-bold px-2 py-0.5 rounded border border-purple-500/20 uppercase">Strategy</span>
+<div class="h-6 w-6 rounded-full bg-cover bg-center" data-alt="Avatar Sarah" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDBDZxvIdBEHIrA6ZGnXCb1aGn-jTEZvZQri2ccKSFFDWAGbuWn41GoDo7zd6qClWbvneSnQxgYYOhAMVFPu7efcuxKtprJir8RyCCkFQoEXGyj_UtytMNN7vk8OIHSYw2TM3-hUI4iFeJkLRA_U1MiPL4ivMMWiumhuDRKmYfJDozhBLUBm-MkCseDOGFU_vorHMGdDA-FC1nuj1oLaliSQysySN2VZd0XQm5VbtU12muNqiP2nddfwVsNV9dh93oYofgFXFomS9-C')"></div>
+</div>
+<h4 class="font-semibold text-slate-900 dark:text-slate-100 mb-2 leading-snug">Competitor Analysis Report</h4>
+<div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 mb-3">
+<div class="bg-purple-500 h-1.5 rounded-full" style="width: 30%"></div>
+</div>
+<div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+<span>Due Friday</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">attach_file</span> 1</span>
+</div>
+</div>
+</div>
+<!-- Column: Review / Done -->
+<div class="flex flex-col gap-4">
+<div class="flex items-center justify-between mb-2">
+<h3 class="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+<span class="h-2 w-2 rounded-full bg-green-500"></span>
+                                Review
+                            </h3>
+<span class="bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded text-xs font-bold">2</span>
+</div>
+<!-- Card 5 -->
+<div class="bg-white dark:bg-surface-dark rounded-xl p-4 border border-slate-200 dark:border-slate-700 shadow-sm opacity-90">
+<div class="flex justify-between items-start mb-2">
+<span class="bg-green-500/10 text-green-500 text-[10px] font-bold px-2 py-0.5 rounded border border-green-500/20 uppercase">Ready</span>
+<div class="h-6 w-6 rounded-full bg-cover bg-center" data-alt="Avatar Mike" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCflXHyPXbkWRDt3RLDuUYf2uhJ03d5VdBMMBdZ3_eOghHZjaDfBZ8wnP1Y2nmbz_ZiRISxM6xu8Rp2Y2r4TzqisseBn4PmFE-x4STAnV3Tt0FJgc4X5UD8p5YNxtHyAANfb8imInhPFz72edeBlvcgH4VJFW-IFoFrD4WhYgTbJZxDFX_yZ3sM1lh1eekQMrYeRk5v4mgS3_gOQOdwMCidV0dUdyLUC1xuJNxzamLrH4BkVuuo5J50ddWnP7UYxu3iSQwCtsf2_Q9B')"></div>
+</div>
+<h4 class="font-semibold text-slate-900 dark:text-slate-100 mb-2 leading-snug">Q2 Expense Approvals</h4>
+<div class="flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined text-green-500 text-lg">check_circle</span>
+<span class="text-xs text-slate-500 dark:text-slate-400">Pending your sign-off</span>
+</div>
+<button class="w-full text-xs font-bold text-white bg-green-600 hover:bg-green-700 px-3 py-2 rounded transition-colors">Review &amp; Approve</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Floating AI Delegation Bar -->
+<div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 w-full max-w-2xl px-4">
+<div class="bg-surface-light dark:bg-surface-dark border border-primary/30 rounded-full shadow-2xl p-2 pl-6 flex items-center gap-4 relative overflow-hidden group/ai ring-1 ring-primary/20">
+<!-- Subtle Glow Effect -->
+<div class="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 opacity-50 pointer-events-none"></div>
+<span class="material-symbols-outlined text-primary animate-pulse">smart_toy</span>
+<input class="flex-1 bg-transparent border-none text-slate-900 dark:text-white placeholder:text-slate-500 focus:ring-0 text-base font-medium" placeholder="Ask Chief to delegate, schedule, or update..." type="text"/>
+<div class="flex items-center gap-2 pr-1">
+<button class="h-10 w-10 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined">mic</span>
+</button>
+<button class="h-10 w-10 rounded-full bg-primary hover:bg-primary/90 text-white flex items-center justify-center transition-colors shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined">arrow_upward</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Right Panel: Live Feed -->
+<aside class="w-80 flex flex-col border-l border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark/50 hidden 2xl:flex overflow-y-auto">
+<div class="p-6 pb-2 border-b border-slate-200 dark:border-slate-800">
+<div class="flex items-center justify-between mb-1">
+<h3 class="text-slate-900 dark:text-white font-bold text-lg tracking-tight">Live Feed</h3>
+<button class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+<span class="material-symbols-outlined text-lg">history</span>
+</button>
+</div>
+</div>
+<div class="p-4 flex flex-col gap-6 relative">
+<!-- Timeline Line -->
+<div class="absolute left-8 top-6 bottom-6 w-px bg-slate-200 dark:bg-slate-800"></div>
+<!-- Feed Item 1 -->
+<div class="relative pl-10">
+<div class="absolute left-2.5 top-1 h-3 w-3 rounded-full bg-primary ring-4 ring-white dark:ring-surface-dark z-10"></div>
+<div class="flex flex-col gap-1">
+<p class="text-xs text-slate-400 font-medium">Just now</p>
+<p class="text-sm text-slate-900 dark:text-slate-100 leading-snug">
+<span class="font-bold">Raj</span> uploaded final contract for 
+                            <span class="text-primary cursor-pointer hover:underline">Vendor X</span>.
+                        </p>
+<div class="mt-2 p-2 bg-white dark:bg-background-dark border border-slate-200 dark:border-slate-700/50 rounded flex items-center gap-3">
+<div class="h-8 w-8 bg-red-500/10 rounded flex items-center justify-center text-red-500">
+<span class="material-symbols-outlined text-lg">picture_as_pdf</span>
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-xs font-medium truncate dark:text-white">contract_v3_final.pdf</p>
+<p class="text-[10px] text-slate-500">2.4 MB</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Feed Item 2 -->
+<div class="relative pl-10">
+<div class="absolute left-2.5 top-1 h-3 w-3 rounded-full bg-slate-300 dark:bg-slate-600 ring-4 ring-white dark:ring-surface-dark z-10"></div>
+<div class="flex flex-col gap-1">
+<p class="text-xs text-slate-400 font-medium">15m ago</p>
+<p class="text-sm text-slate-900 dark:text-slate-100 leading-snug">
+<span class="font-bold">Sarah</span> commented on <span class="font-medium">Financial Model Q3</span>.
+                        </p>
+<p class="text-xs text-slate-500 dark:text-slate-400 italic">"Updated the EBITDA projections based on yesterday's sync..."</p>
+</div>
+</div>
+<!-- Feed Item 3 -->
+<div class="relative pl-10">
+<div class="absolute left-2.5 top-1 h-3 w-3 rounded-full bg-green-500 ring-4 ring-white dark:ring-surface-dark z-10"></div>
+<div class="flex flex-col gap-1">
+<p class="text-xs text-slate-400 font-medium">1h ago</p>
+<p class="text-sm text-slate-900 dark:text-slate-100 leading-snug">
+<span class="font-bold">Mike</span> completed task <span class="line-through text-slate-500">Client Onboarding</span>.
+                        </p>
+</div>
+</div>
+<!-- Feed Item 4 -->
+<div class="relative pl-10">
+<div class="absolute left-2.5 top-1 h-3 w-3 rounded-full bg-purple-500 ring-4 ring-white dark:ring-surface-dark z-10"></div>
+<div class="flex flex-col gap-1">
+<p class="text-xs text-slate-400 font-medium">2h ago</p>
+<p class="text-sm text-slate-900 dark:text-slate-100 leading-snug">
+<span class="font-bold text-primary">Chief of Staff</span> auto-scheduled <span class="font-medium">Weekly Sync</span> for Friday at 10am.
+                        </p>
+</div>
+</div>
+</div>
+<!-- Quick Broadcast -->
+<div class="mt-auto p-4 border-t border-slate-200 dark:border-slate-800">
+<button class="w-full flex items-center justify-center gap-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 py-2 rounded-lg text-xs font-bold transition-colors">
+<span class="material-symbols-outlined text-base">campaign</span>
+                    Broadcast to Team
+                </button>
+</div>
+</aside>
+</main>
+</body></html>

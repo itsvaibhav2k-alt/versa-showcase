@@ -1,0 +1,39 @@
+appId: com.vaibhavmaddhi.versa
+name: SettingsScreen - Real Data
+---
+- runFlow: setup-login.yaml
+- waitForAnimationToEnd:
+    timeout: 10000
+# Navigate to Settings tab (coordinate tap)
+- tapOn:
+    point: "90%,97%"
+- waitForAnimationToEnd:
+    timeout: 5000
+# Screen title
+- assertVisible:
+    label: "Settings"
+# Profile info
+- assertVisible:
+    label: "Satya Nadella"
+- assertVisible:
+    label: "satya@contoso.com"
+- assertVisible:
+    label: "Contoso Corp"
+# Edit Profile link
+- assertVisible:
+    label: "Edit Profile"
+# Section titles
+- assertVisible:
+    label: "Preferences"
+- assertVisible:
+    label: "Integrations"
+# Scroll down to see Account section
+- swipe:
+    start: "50%,70%"
+    end: "50%,30%"
+- waitForAnimationToEnd:
+    timeout: 2000
+- assertVisible:
+    label: "Account"
+- assertVisible:
+    label: "Sign Out"

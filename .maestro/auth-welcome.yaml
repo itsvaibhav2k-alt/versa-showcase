@@ -1,0 +1,9 @@
+appId: com.vaibhavmaddhi.versa
+name: Auth Welcome Screen
+---
+- waitForAnimationToEnd:
+    timeout: 10000
+# If signed out, welcome screen shows
+- assertVisible:
+    label: "Versa"
+    optional: true

@@ -1,0 +1,25 @@
+appId: com.vaibhavmaddhi.versa
+name: ColorSystem - All Screens Visual Check
+---
+- runFlow: setup-login.yaml
+- waitForAnimationToEnd:
+    timeout: 10000
+- takeScreenshot: screenshots/color-home
+# Navigate to Team tab (coordinate tap — text taps don't trigger nav in Expo Go)
+- tapOn:
+    point: "30%,97%"
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: screenshots/color-team
+# Navigate to Comms tab (coordinate tap — text taps don't trigger nav in Expo Go)
+- tapOn:
+    point: "70%,97%"
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: screenshots/color-comms
+# Navigate to Settings tab (coordinate tap — text taps don't trigger nav in Expo Go)
+- tapOn:
+    point: "90%,97%"
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: screenshots/color-settings

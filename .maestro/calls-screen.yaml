@@ -1,0 +1,65 @@
+appId: com.vaibhavmaddhi.versa
+name: CallsScreen - Real Data
+---
+- runFlow: setup-login.yaml
+- waitForAnimationToEnd:
+    timeout: 10000
+
+# Navigate home first to reset state
+- tapOn:
+    point: "10%,97%"
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Navigate to Comms tab (coordinate tap)
+- tapOn:
+    point: "70%,97%"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+- assertVisible:
+    label: "Comms"
+
+# Make sure Calls sub-tab is active
+- tapOn:
+    label: "Calls"
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Quick Call Card is visible at the top
+- assertVisible:
+    label: ".*Versa.*call.*"
+    optional: true
+
+# Assert Emails sub-tab is available
+- assertVisible:
+    label: "Emails.*"
+
+# Assert call list section headers (seed data)
+- assertVisible:
+    label: "TODAY"
+    optional: true
+
+# Tap filter icon (top-right)
+- tapOn:
+    point: "93%,8%"
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Assert filter options in bottom sheet
+- assertVisible:
+    label: "All Calls"
+    optional: true
+- assertVisible:
+    label: "Completed"
+    optional: true
+- assertVisible:
+    label: "Missed"
+    optional: true
+
+# Close filter sheet
+- tapOn:
+    label: "All Calls"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 3000
